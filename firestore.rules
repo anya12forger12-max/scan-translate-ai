@@ -1,0 +1,136 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return request.auth.token.role == 'admin'
+        || exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isValidUserData(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+        && data.email is string
+        && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidScanData(data) {
+      return data.keys().hasAll(['userId', 'rawValue', 'scanType', 'scannedAt'])
+        && data.userId is string
+        && data.rawValue is string
+        && data.scanType in ['qr', 'barcode', 'ocr', 'translation'];
+    }
+
+    // Users collection
+    match /users/{userId} {
+
+      // Allow create during registration
+      allow create: if isAuthenticated()
+        && isOwner(userId)
+        && isValidUserData(request.resource.data);
+
+      // Allow read: own data or admin
+      allow read: if isAuthenticated()
+        && (isOwner(userId) || isAdmin());
+
+      // Allow update: own data only
+      allow update: if isAuthenticated()
+        && isOwner(userId)
+        && request.resource.data.keys().hasAll(['email', 'createdAt'])
+        && request.resource.data.email == resource.data.email;
+
+      // Allow delete: own account or admin
+      allow delete: if isAuthenticated()
+        && (isOwner(userId) || isAdmin());
+
+      // Subcollections
+      match /{document=**} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // Scan History collection
+    match /scan_history/{document} {
+
+      // Create: authenticated user creates their own scan records
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && isValidScanData(request.resource.data);
+
+      // Read: only owner or admin
+      allow read: if isAuthenticated()
+        && (request.resource.data.userId == request.auth.uid
+          || isAdmin());
+
+      // Update: owner only, limited fields
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['isFavorite', 'displayValue'])
+        && request.resource.data.userId == resource.data.userId;
+
+      // Delete: owner or admin
+      allow delete: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid
+          || isAdmin());
+
+      // List queries: must filter by userId
+      allow list: if isAuthenticated()
+        && (request.query.userId == request.auth.uid
+          || isAdmin());
+    }
+
+    // Privacy Acceptance collection
+    match /privacy_acceptance/{document} {
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated()
+        && (request.resource.data.userId == request.auth.uid
+          || isAdmin());
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Audit Logs collection (admin only)
+    match /audit_logs/{document} {
+      allow create: if isAdmin();
+      allow read: if isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // App Config collection (admin only)
+    match /app_config/{document} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Device Info collection
+    match /device_info/{document} {
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated()
+        && (request.resource.data.userId == request.auth.uid
+          || isAdmin());
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
