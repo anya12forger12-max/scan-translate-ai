@@ -1,1 +1,29 @@
-{\n  "project_info": {\n    "project_number": "YOUR_PROJECT_NUMBER",\n    "firebase_url": "https://YOUR_PROJECT_ID.firebaseio.com",\n    "project_id": "YOUR_PROJECT_ID",\n    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"\n  },\n  "client": [\n    {\n      "client_info": {\n        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_ID",\n        "android_client_info": {\n          "package_name": "com.scantranslate.ai",\n          "certificate_hash": [\n            "YOUR_SHA1_CERTIFICATE_HASH",\n            "YOUR_SHA256_CERTIFICATE_HASH"\n          ]\n        }\n      },\n      "oauth_client": [\n        {\n          "client_id": "YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com",\n          "client_type": 3\n        }\n      ],\n      "api_key": [\n        {\n          "current_key": "YOUR_API_KEY"\n        }\n      ],\n      "services": {\n        "appinvite_service": {\n          "other_platform_oauth_client": [\n            {\n              "client_id": "YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com",\n              "client_type": 3\n            }\n          ]\n        }\n      }\n    }\n  ],\n  "configuration_version": "1"\n}\n
+{
+  "project_info": {
+    "project_number": "846503903743",
+    "project_id": "scan-translate-ai",
+    "storage_bucket": "scan-translate-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:846503903743:android:06bedbdbf494ec42d267ca",
+        "android_client_info": {
+          "package_name": "com.scantranslateai.scan_translate_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf-hD8K5HyKsIK2XVKLTUXaCHRzP8ZzYc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
