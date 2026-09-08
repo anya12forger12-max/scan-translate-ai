@@ -29,6 +29,16 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    if (!project.state.executed) {
+        afterEvaluate {
+            if (project.extensions.findByName("android") != null) {
+                project.dependencies.add(
+                    "implementation",
+                    "androidx.concurrent:concurrent-futures:1.2.0"
+                )
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
