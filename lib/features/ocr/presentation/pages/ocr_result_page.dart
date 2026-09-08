@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/loading_display.dart';
-import '../entities/ocr_result.dart';
+import '../../domain/entities/ocr_result.dart';
 import '../widgets/ocr_text_display.dart';
 
 class OcrResultPage extends StatelessWidget {
@@ -28,7 +28,7 @@ class OcrResultPage extends StatelessWidget {
             );
           },
           onShare: () {
-            SharePlus.instance.share(ShareParams(text: result.text));
+            Share.share(result.text);
           },
         ),
       ),

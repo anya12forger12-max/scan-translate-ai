@@ -16,6 +16,6 @@ abstract class HistoryRepository {
 
   Future<Either<Failure, void>> clearHistory();
 
-  Future<Either<Failure<List<HistoryItem>>, List<HistoryItem>>> searchHistory(
+  Future<Either<Failure, List<HistoryItem>>> searchHistory(
       String query);
 }

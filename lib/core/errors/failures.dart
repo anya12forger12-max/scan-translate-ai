@@ -1,3 +1,5 @@
+import 'exceptions.dart';
+
 sealed class Failure {
   final String message;
   final String? code;

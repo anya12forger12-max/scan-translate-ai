@@ -107,7 +107,7 @@ class OcrRemoteDataSource {
   }
 
   String? _detectLanguage(String text) {
-    final latinChars = RegExp(r'^[a-zA-Z0-9\s.,!?;:\'"-]+$');
+    final latinChars = RegExp(r'^[\x20-\x7E]+$');
     if (latinChars.hasMatch(text)) return 'en';
     final cjkChars = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf]');
     if (cjkChars.hasMatch(text)) return 'zh';

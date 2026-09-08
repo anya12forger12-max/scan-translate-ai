@@ -75,9 +75,7 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
         body: ScanResultCard(
           result: scannerState.result!,
           onShare: () {
-            SharePlus.instance.share(
-              ShareParams(text: scannerState.result!.rawValue),
-            );
+            Share.share(scannerState.result!.rawValue);
           },
           onSave: () {
             ScaffoldMessenger.of(context).showSnackBar(

@@ -49,7 +49,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Semantics(
+        title: Semantics(
           label: 'Create Account page',
           child: Text('Create Account'),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../app/di/providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
@@ -178,9 +179,7 @@ class _VoiceTranslationPageState extends ConsumerState<VoiceTranslationPage> {
                   );
                 },
                 onShare: () {
-                  SharePlus.instance.share(
-                    ShareParams(text: transState.result!.translatedText),
-                  );
+                  Share.share(transState.result!.translatedText);
                 },
               ),
           ],

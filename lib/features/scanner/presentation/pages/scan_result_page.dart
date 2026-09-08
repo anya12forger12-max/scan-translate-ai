@@ -26,9 +26,7 @@ class ScanResultPage extends StatelessWidget {
             ScanResultCard(
               result: result,
               onShare: () {
-                SharePlus.instance.share(
-                  ShareParams(text: result.rawValue),
-                );
+                Share.share(result.rawValue);
               },
               onCopy: () {
                 HapticUtils.lightImpact();

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../providers/auth_repository_provider.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 

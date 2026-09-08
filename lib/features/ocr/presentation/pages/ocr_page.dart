@@ -76,9 +76,7 @@ class OcrPage extends ConsumerWidget {
                   );
                 },
                 onShare: () {
-                  SharePlus.instance.share(
-                    ShareParams(text: ocrState.result!.text),
-                  );
+                  Share.share(ocrState.result!.text);
                 },
               ),
           ],

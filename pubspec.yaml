@@ -28,9 +28,9 @@ dependencies:
   google_sign_in: ^6.3.0
 
   # ML Kit
-  google_mlkit_barcode_scanning: ^0.12.0
-  google_mlkit_text_recognition: ^0.14.0
-  google_mlkit_translation: ^0.13.0
+  google_mlkit_barcode_scanning: ^0.16.1
+  google_mlkit_text_recognition: ^0.17.1
+  google_mlkit_translation: ^0.15.1
 
   # Camera & Image
   camera: ^0.11.1
@@ -76,7 +76,6 @@ dependencies:
   package_info_plus: ^8.3.0
 
   # Security
-  flutter_dotenv: ^5.2.1
   crypto: ^3.0.6
 
   # Notifications
@@ -93,7 +92,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/images/
-    - assets/lottie/
-    - .env

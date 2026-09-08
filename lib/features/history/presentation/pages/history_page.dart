@@ -211,7 +211,7 @@ class HistoryPage extends ConsumerWidget {
               children: [
                 TextButton.icon(
                   onPressed: () {
-                    SharePlus.instance.share(ShareParams(text: item.rawValue));
+                    Share.share(item.rawValue);
                   },
                   icon: const Icon(Icons.share_rounded),
                   label: const Text('Share'),

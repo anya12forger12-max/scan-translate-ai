@@ -11,25 +11,6 @@ class AccessibilityUtils {
   }) {
     return SemanticsLabel(label: label, hint: hint, value: value);
   }
-
-  static void announceForAccessibility(String message) {
-    FlutterError.onError = (FlutterErrorDetails details) {
-      FlutterError.presentError(details);
-    };
-  }
-
-  static SemanticsProperties cardSemantics({
-    required String label,
-    required String hint,
-    bool isButton = true,
-  }) {
-    return SemanticsProperties(
-      label: label,
-      hint: hint,
-      button: isButton,
-      enabled: true,
-    );
-  }
 }
 
 class SemanticsLabel {

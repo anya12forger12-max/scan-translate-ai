@@ -41,7 +41,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Semantics(
+        title: Semantics(
           label: 'Reset Password page',
           child: Text('Reset Password'),
         ),

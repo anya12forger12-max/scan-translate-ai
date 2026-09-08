@@ -1,20 +1,15 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../../../../core/constants/api_constants.dart';
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/network/ssl_pinning.dart';
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../../../../core/errors/exceptions.dart';
 
 class TranslationRemoteDataSource {
   final FlutterTts flutterTts;
   final stt.SpeechToText speechToText;
-  final String? apiKey;
 
   TranslationRemoteDataSource({
     required this.flutterTts,
     required this.speechToText,
-    this.apiKey,
   });
 
   Future<Map<String, dynamic>> translateText({
@@ -22,80 +17,43 @@ class TranslationRemoteDataSource {
     required String targetLanguage,
     String? sourceLanguage,
   }) async {
+    final effectiveSource = (sourceLanguage == null || sourceLanguage == 'auto')
+        ? _simpleDetect(text)
+        : sourceLanguage;
+
+    final sourceLang = _toTranslateLanguage(effectiveSource);
+    final targetLang = _toTranslateLanguage(targetLanguage);
+
+    if (sourceLang == null || targetLang == null) {
+      return _simulateTranslation(text, targetLanguage, sourceLanguage);
+    }
+
     try {
-      if (apiKey == null || apiKey!.isEmpty) {
-        return _simulateTranslation(text, targetLanguage, sourceLanguage);
-      }
+      final modelManager = OnDeviceTranslatorModelManager();
+      await modelManager.downloadModel(sourceLang.bcpCode);
+      await modelManager.downloadModel(targetLang.bcpCode);
 
-      final client = await SslPinningConfig.createHttpClient();
+      final translator =
+          OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
       try {
-        final response = await client
-            .post(
-              Uri.parse('${ApiConstants.baseUrl}${ApiConstants.translationEndpoint}'),
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer $apiKey',
-              },
-              body: jsonEncode({
-                'q': text,
-                'source': sourceLanguage ?? 'auto',
-                'target': targetLanguage,
-                'format': 'text',
-              }),
-            )
-            .timeout(const Duration(seconds: 30));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as Map<String, dynamic>;
-          return {
-            'originalText': text,
-            'translatedText': data['translatedText'] ?? '',
-            'sourceLanguage': data['detectedSourceLanguage'] ?? sourceLanguage ?? 'auto',
-            'targetLanguage': targetLanguage,
-            'confidence': data['confidence'] ?? 0.0,
-          };
-        }
-        throw TranslationException('Translation failed: ${response.statusCode}');
+        final translatedText = await translator.translateText(text);
+        return {
+          'originalText': text,
+          'translatedText': translatedText,
+          'sourceLanguage': effectiveSource,
+          'targetLanguage': targetLanguage,
+          'confidence': 1.0,
+        };
       } finally {
-        client.close();
+        await translator.close();
       }
-    } catch (e) {
-      if (e is TranslationException) rethrow;
+    } catch (_) {
       return _simulateTranslation(text, targetLanguage, sourceLanguage);
     }
   }
 
   Future<String> detectLanguage(String text) async {
-    try {
-      if (apiKey == null || apiKey!.isEmpty) {
-        return _simpleDetect(text);
-      }
-
-      final client = await SslPinningConfig.createHttpClient();
-      try {
-        final response = await client
-            .post(
-              Uri.parse(
-                  '${ApiConstants.baseUrl}${ApiConstants.languageDetectionEndpoint}'),
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer $apiKey',
-              },
-              body: jsonEncode({'q': text}),
-            )
-            .timeout(const Duration(seconds: 30));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as Map<String, dynamic>;
-          return data['language'] as String? ?? 'en';
-        }
-        return 'en';
-      } finally {
-        client.close();
-      }
-    } catch (_) {
-      return _simpleDetect(text);
-    }
+    return _simpleDetect(text);
   }
 
   Future<String> speechToTextConverter({
@@ -149,6 +107,14 @@ class TranslationRemoteDataSource {
     return await speechToText.initialize();
   }
 
+  TranslateLanguage? _toTranslateLanguage(String? code) {
+    if (code == null) return null;
+    for (final language in TranslateLanguage.values) {
+      if (language.bcpCode == code) return language;
+    }
+    return null;
+  }
+
   Map<String, dynamic> _simulateTranslation(
     String text,
     String targetLanguage,
@@ -164,7 +130,7 @@ class TranslationRemoteDataSource {
   }
 
   String _simpleDetect(String text) {
-    final latinChars = RegExp(r'^[a-zA-Z0-9\s.,!?;:\'"-]+$');
+    final latinChars = RegExp(r'^[\x20-\x7E]+$');
     if (latinChars.hasMatch(text)) return 'en';
     final cjkChars = RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf]');
     if (cjkChars.hasMatch(text)) return 'zh';

@@ -110,9 +110,7 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
               child: ScanResultCard(
                 result: scannerState.result!,
                 onShare: () {
-                  SharePlus.instance.share(
-                    ShareParams(text: scannerState.result!.rawValue),
-                  );
+                  Share.share(scannerState.result!.rawValue);
                 },
                 onOpen: scannerState.result!.decodedUrl != null
                     ? () => _handleOpenUrl(scannerState.result!.decodedUrl!)

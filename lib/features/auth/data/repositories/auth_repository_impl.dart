@@ -124,7 +124,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure<void>, void>> acceptPrivacyPolicy(String version) async {
+  Future<Either<Failure, void>> acceptPrivacyPolicy(String version) async {
     try {
       await remoteDataSource.acceptPrivacyPolicy(version);
       return const Right(null);
@@ -144,7 +144,7 @@ class AuthRepositoryImpl implements AuthRepository {
       email: data['email'] as String? ?? '',
       displayName: data['displayName'] as String?,
       photoUrl: data['photoUrl'] as String?,
-      role: data['role'] as String? == 'admin' ? UserRole.admin : UserRole.user,
+      role: (data['role'] as String?) == 'admin' ? UserRole.admin : UserRole.user,
       emailVerified: data['emailVerified'] as bool? ?? false,
       privacyPolicyAccepted: data['privacyPolicyAccepted'] as bool? ?? false,
       createdAt: DateTime.now(),

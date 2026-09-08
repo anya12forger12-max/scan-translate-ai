@@ -27,7 +27,7 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> deleteAccount();
 
-  Future<Either<Failure<void>, void>> acceptPrivacyPolicy(String version);
+  Future<Either<Failure, void>> acceptPrivacyPolicy(String version);
 
   Future<bool> isPrivacyPolicyAccepted();
 }
