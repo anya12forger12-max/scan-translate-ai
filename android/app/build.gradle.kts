@@ -47,12 +47,14 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            // minify/shrink must stay OFF for Flutter apps: Flutter feeds app
+            // Kotlin/Java classes to dexing via project_dex_archive, which R8
+            // never sees. Enabling R8 silently strips the launcher activity
+            // (crash: "Didn't find class ...MainActivity") and breaks WorkManager/Room reflective
+            // instantiation ("Failed to create an instance of ...WorkDatabase").
+            // Dart code is already AOT-optimized.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
