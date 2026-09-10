@@ -57,7 +57,7 @@ class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
                     Semantics(
                       label: 'Last updated date',
                       child: Text(
-                        'Last Updated: July 2026',
+                        'Last Updated: September 2026',
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -98,15 +98,23 @@ class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
                       'We use Firebase (Google) for authentication, database, and storage services. These services have their own privacy policies and security measures. We also use ML Kit for on-device text recognition, which processes images locally without sending them to external servers.'
                     ),
                     _buildSection(
-                      '7. Children\'s Privacy',
+                      '7. Advertising and Advertising IDs',
+                      'Scan & Translate AI is a free app supported by advertising served by Google AdMob. AdMob may use your device advertising identifier (Advertising ID) to display and measure ads and to prevent fraud.\n'
+                      '• We do not sell your personal data to advertisers.\n'
+                      '• You may see personalized or non-personalized ads. You can opt out of personalized advertising at any time in your device settings (Android: Settings > Privacy > Ads > "Delete advertising ID") and in Google Ads Settings (adssettings.google.com).\n'
+                      '• Google\'s data practices are governed by Google\'s Privacy Policy (policies.google.com/privacy).\n'
+                      '• Where required by law, a consent dialog is shown before personalized ads are served.'
+                    ),
+                    _buildSection(
+                      '8. Children\'s Privacy',
                       'Our service is not intended for children under 13. We do not knowingly collect information from children under 13. If we become aware that a child under 13 has provided us with personal information, we will take steps to delete it.'
                     ),
                     _buildSection(
-                      '8. Changes to This Policy',
+                      '9. Changes to This Policy',
                       'We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last Updated" date. You may be required to review and accept the updated policy before continuing to use the app.'
                     ),
                     _buildSection(
-                      '9. Contact Us',
+                      '10. Contact Us',
                       'If you have any questions about this Privacy Policy, please contact us at:\n'
                       'Email: ${AppConstants.supportEmail}\n'
                       'Website: ${AppConstants.privacyPolicyUrl}'
