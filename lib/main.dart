@@ -3,7 +3,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'app/app.dart';
 
 void main() async {
@@ -17,12 +16,6 @@ void main() async {
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
-  }
-
-  try {
-    await MobileAds.instance.initialize();
-  } catch (e) {
-    debugPrint('AdMob initialization failed: $e');
   }
 
   FlutterError.onError = (errorDetails) {
