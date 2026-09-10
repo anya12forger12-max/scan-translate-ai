@@ -1,7 +1,7 @@
 name: scan_translate_ai
 description: 'Scan & Translate AI - Premium QR/Barcode Scanner, OCR, and Translation App'
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.12.2
@@ -80,6 +80,7 @@ dependencies:
 
   # Notifications
   flutter_local_notifications: ^18.0.1
+  google_mobile_ads: ^9.1.0
 
 dev_dependencies:
   flutter_test:

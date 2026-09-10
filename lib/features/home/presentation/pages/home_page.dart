@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../widgets/ad_banner.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/feature_card.dart';
 
@@ -62,7 +63,9 @@ class HomePage extends ConsumerWidget {
                             label: 'User profile picture',
                             child: CircleAvatar(
                               radius: 24,
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                              backgroundColor: AppColors.primary.withValues(
+                                alpha: 0.1,
+                              ),
                               backgroundImage: user?.photoUrl != null
                                   ? NetworkImage(user!.photoUrl!)
                                   : null,
@@ -177,7 +180,9 @@ class HomePage extends ConsumerWidget {
                     animationDelay: 350,
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Open history and filter by favorites')),
+                        const SnackBar(
+                          content: Text('Open history and filter by favorites'),
+                        ),
                       );
                       Navigator.pushNamed(context, '/history');
                     },
@@ -196,6 +201,7 @@ class HomePage extends ConsumerWidget {
           ],
         ),
       ),
+      bottomNavigationBar: const AdBanner(),
     );
   }
 }
