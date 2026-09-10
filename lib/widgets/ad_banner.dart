@@ -3,14 +3,12 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// Adaptive banner ad shown at the bottom of the home screen.
 ///
-/// Uses Google's official *test* ad unit until real AdMob IDs are configured.
-/// Production: replace [adUnitId] and the app id in AndroidManifest.xml with
-/// values from a real AdMob account.
+/// Uses the real AdMob banner unit for scan-translate-ai.
 class AdBanner extends StatefulWidget {
   const AdBanner({super.key});
 
-  // Android test banner unit (see https://developers.google.com/admob/android/test-ads).
-  static const String adUnitId = 'ca-app-pub-3940256099942544/6300978111';
+  // AdMob banner unit for scan-translate-ai (com.scantranslateai.scan_translate_ai).
+  static const String adUnitId = 'ca-app-pub-7692188087567714/5061410476';
 
   @override
   State<AdBanner> createState() => _AdBannerState();
