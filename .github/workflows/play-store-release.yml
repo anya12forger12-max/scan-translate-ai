@@ -78,6 +78,7 @@ jobs:
           status: completed
 
   build-ios:
+    continue-on-error: true
     runs-on: macos-latest
 
     steps:

@@ -40,6 +40,15 @@ android {
                 keyPassword = keystoreProperties["keyPassword"] as String
                 storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
+            } else {
+                // No key.properties (e.g. CI): fall back to the Android debug
+                // key so release builds always succeed and produce installable
+                // artifacts for testing. Real Play Console uploads still
+                // require key.properties with the registered upload key.
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+                storePassword = "android"
             }
         }
     }
