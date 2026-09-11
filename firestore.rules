@@ -12,20 +12,38 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    // Admin is determined EXCLUSIVELY by verified custom claims on the
+    // Firebase ID token (set via the privileged Admin SDK / Firebase CLI).
+    // It must NEVER trust a user-writable document field.
     function isAdmin() {
-      return request.auth.token.role == 'admin'
-        || exists(/databases/$(database)/documents/users/$(request.auth.uid))
-          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth.token.role == 'admin';
+    }
+
+    // Role-bearing fields can never be written by clients.
+    function hasNoPrivilegeFields(data) {
+      return !data.keys().hasAny(['role', 'isAdmin', 'admin', 'permissions', 'claims']);
     }
 
     function isValidUserData(data) {
       return data.keys().hasAll(['email', 'createdAt'])
+        && hasNoPrivilegeFields(data)
         && data.email is string
         && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
     }
 
+    function isValidUserUpdate(data) {
+      // Only benign preference fields may change; identity fields immutable.
+      return data.keys().hasAll(['email', 'createdAt'])
+        && hasNoPrivilegeFields(data)
+        && data.email == resource.data.email
+        && data.createdAt == resource.data.createdAt
+        && data.diff(resource.data).affectedKeys()
+            .hasOnly(['displayName', 'themePreference', 'preferredLocale', 'updatedAt', 'email', 'createdAt']);
+    }
+
     function isValidScanData(data) {
       return data.keys().hasAll(['userId', 'rawValue', 'scanType', 'scannedAt'])
+        && hasNoPrivilegeFields(data)
         && data.userId is string
         && data.rawValue is string
         && data.scanType in ['qr', 'barcode', 'ocr', 'translation'];
@@ -34,7 +52,7 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
 
-      // Allow create during registration
+      // Allow create during registration (privilege fields forbidden)
       allow create: if isAuthenticated()
         && isOwner(userId)
         && isValidUserData(request.resource.data);
@@ -43,11 +61,10 @@ service cloud.firestore {
       allow read: if isAuthenticated()
         && (isOwner(userId) || isAdmin());
 
-      // Allow update: own data only
+      // Allow update: own data only, only benign fields, no privilege fields
       allow update: if isAuthenticated()
         && isOwner(userId)
-        && request.resource.data.keys().hasAll(['email', 'createdAt'])
-        && request.resource.data.email == resource.data.email;
+        && isValidUserUpdate(request.resource.data);
 
       // Allow delete: own account or admin
       allow delete: if isAuthenticated()
@@ -69,15 +86,16 @@ service cloud.firestore {
 
       // Read: only owner or admin
       allow read: if isAuthenticated()
-        && (request.resource.data.userId == request.auth.uid
+        && (resource.data.userId == request.auth.uid
           || isAdmin());
 
       // Update: owner only, limited fields
       allow update: if isAuthenticated()
         && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && hasNoPrivilegeFields(request.resource.data)
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['isFavorite', 'displayValue'])
-        && request.resource.data.userId == resource.data.userId;
+            .hasOnly(['isFavorite', 'displayValue']);
 
       // Delete: owner or admin
       allow delete: if isAuthenticated()
@@ -93,12 +111,14 @@ service cloud.firestore {
     // Privacy Acceptance collection
     match /privacy_acceptance/{document} {
       allow create: if isAuthenticated()
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid
+        && hasNoPrivilegeFields(request.resource.data);
       allow read: if isAuthenticated()
-        && (request.resource.data.userId == request.auth.uid
+        && (resource.data.userId == request.auth.uid
           || isAdmin());
       allow update: if isAuthenticated()
-        && resource.data.userId == request.auth.uid;
+        && resource.data.userId == request.auth.uid
+        && hasNoPrivilegeFields(request.resource.data);
       allow delete: if false;
     }
 
@@ -119,12 +139,14 @@ service cloud.firestore {
     // Device Info collection
     match /device_info/{document} {
       allow create: if isAuthenticated()
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid
+        && hasNoPrivilegeFields(request.resource.data);
       allow read: if isAuthenticated()
-        && (request.resource.data.userId == request.auth.uid
+        && (resource.data.userId == request.auth.uid
           || isAdmin());
       allow update: if isAuthenticated()
-        && resource.data.userId == request.auth.uid;
+        && resource.data.userId == request.auth.uid
+        && hasNoPrivilegeFields(request.resource.data);
       allow delete: if false;
     }
 
