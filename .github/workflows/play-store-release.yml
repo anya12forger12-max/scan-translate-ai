@@ -43,6 +43,17 @@ jobs:
             echo "GOOGLE_SERVICES_JSON secret not set; using committed google-services.json."
           fi
 
+      - name: Ensure debug keystore
+        run: |
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            mkdir -p "$HOME/.android"
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US" >/dev/null 2>&1
+          fi
+
       - name: Build Android Release Bundle
         run: |
           flutter build appbundle \
