@@ -21,24 +21,33 @@ service cloud.firestore {
 
     // Role-bearing fields can never be written by clients.
     function hasNoPrivilegeFields(data) {
-      return !data.keys().hasAny(['role', 'isAdmin', 'admin', 'permissions', 'claims']);
+      return !data.keys().hasAny(['role', 'isAdmin', 'admin', 'permissions', 'claims', 'banned']);
     }
 
     function isValidUserData(data) {
-      return data.keys().hasAll(['email', 'createdAt'])
-        && hasNoPrivilegeFields(data)
+      return hasNoPrivilegeFields(data)
+        && data.keys().hasAll(['email', 'createdAt'])
         && data.email is string
         && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
     }
 
-    function isValidUserUpdate(data) {
-      // Only benign preference fields may change; identity fields immutable.
-      return data.keys().hasAll(['email', 'createdAt'])
-        && hasNoPrivilegeFields(data)
-        && data.email == resource.data.email
-        && data.createdAt == resource.data.createdAt
-        && data.diff(resource.data).affectedKeys()
-            .hasOnly(['displayName', 'themePreference', 'preferredLocale', 'updatedAt', 'email', 'createdAt']);
+    function isValidUserUpdate(data, oldData) {
+      // Only benign preference fields may change; privilege/identity immutable.
+      return hasNoPrivilegeFields(data)
+        && data.diff(oldData).affectedKeys().hasOnly([
+          'displayName',
+          'themePreference',
+          'preferredLocale',
+          'updatedAt',
+          'email',
+          'createdAt',
+          'privacyPolicyAccepted',
+          'privacyPolicyVersion',
+          'privacyPolicyAcceptedAt',
+          'lastLoginAt',
+        ])
+        && data.email == oldData.email
+        && data.createdAt == oldData.createdAt;
     }
 
     function isValidScanData(data) {
@@ -61,10 +70,10 @@ service cloud.firestore {
       allow read: if isAuthenticated()
         && (isOwner(userId) || isAdmin());
 
-      // Allow update: own data only, only benign fields, no privilege fields
+// Allow update: own data only, whitelisted fields, immutable email
       allow update: if isAuthenticated()
         && isOwner(userId)
-        && isValidUserUpdate(request.resource.data);
+        && isValidUserUpdate(request.resource.data, resource.data);
 
       // Allow delete: own account or admin
       allow delete: if isAuthenticated()

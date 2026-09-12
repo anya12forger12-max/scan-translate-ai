@@ -42,8 +42,19 @@ class ScannerState {
 class ScannerNotifier extends StateNotifier<ScannerState> {
   ScannerNotifier() : super(const ScannerState());
 
+  static const Duration _sameValueDebounce = Duration(milliseconds: 500);
+  String? _lastDetectedValue;
+  DateTime? _lastDetectedAt;
+
   void onBarcodeDetected(String rawValue, String format) {
-    if (state.status == ScannerStatus.scanning) return;
+    final now = DateTime.now();
+    if (_lastDetectedValue == rawValue &&
+        _lastDetectedAt != null &&
+        now.difference(_lastDetectedAt!) < _sameValueDebounce) {
+      return;
+    }
+    _lastDetectedValue = rawValue;
+    _lastDetectedAt = now;
 
     final formatType = _mapFormat(format);
     state = state.copyWith(
@@ -62,6 +73,8 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
   }
 
   void resetScanner() {
+    _lastDetectedValue = null;
+    _lastDetectedAt = null;
     state = const ScannerState();
   }
 

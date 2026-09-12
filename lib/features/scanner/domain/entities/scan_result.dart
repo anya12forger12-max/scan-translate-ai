@@ -4,6 +4,8 @@ import 'barcode_format.dart';
 enum ScanType { qr, barcode, ocr, translation }
 
 class ScanResult extends Equatable {
+  static const int maxRawValueLength = 4096;
+
   final String id;
   final ScanType scanType;
   final BarcodeFormatType formatType;
@@ -11,16 +13,24 @@ class ScanResult extends Equatable {
   final String? displayValue;
   final DateTime scannedAt;
   final bool isFavorite;
+  final bool wasTruncated;
 
-  const ScanResult({
+  ScanResult({
     required this.id,
     required this.scanType,
     this.formatType = BarcodeFormatType.unknown,
-    required this.rawValue,
+    required String rawValue,
     this.displayValue,
     required this.scannedAt,
     this.isFavorite = false,
-  });
+    bool? wasTruncated,
+  })  : rawValue = _truncate(rawValue),
+        wasTruncated = wasTruncated ?? rawValue.length > maxRawValueLength;
+
+  static String _truncate(String value) {
+    if (value.length <= maxRawValueLength) return value;
+    return '${value.substring(0, maxRawValueLength - 1)}…';
+  }
 
   ScanResult copyWith({
     String? id,
@@ -30,6 +40,7 @@ class ScanResult extends Equatable {
     String? displayValue,
     DateTime? scannedAt,
     bool? isFavorite,
+    bool? wasTruncated,
   }) {
     return ScanResult(
       id: id ?? this.id,
@@ -39,6 +50,7 @@ class ScanResult extends Equatable {
       displayValue: displayValue ?? this.displayValue,
       scannedAt: scannedAt ?? this.scannedAt,
       isFavorite: isFavorite ?? this.isFavorite,
+      wasTruncated: wasTruncated ?? this.wasTruncated,
     );
   }
 
@@ -58,5 +70,6 @@ class ScanResult extends Equatable {
         displayValue,
         scannedAt,
         isFavorite,
+        wasTruncated,
       ];
 }

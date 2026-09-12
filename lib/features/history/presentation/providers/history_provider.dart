@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/history_repository_impl.dart';
 import '../../domain/entities/history_item.dart';
 
 enum HistoryStatus { initial, loading, success, error }
@@ -125,8 +124,4 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
 final historyProvider =
     StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
   return HistoryNotifier();
-});
-
-final historyRepositoryProvider = Provider<HistoryRepositoryImpl>((ref) {
-  throw UnimplementedError('History repository provider must be overridden');
 });

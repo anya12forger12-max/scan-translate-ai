@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../app/di/providers.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -202,10 +203,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(clearError: true);
   }
 }
-
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  throw UnimplementedError('Auth repository provider must be overridden');
-});
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);

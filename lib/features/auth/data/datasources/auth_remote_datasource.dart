@@ -57,7 +57,6 @@ class AuthRemoteDataSource {
       final userModel = {
         'email': email.trim(),
         'displayName': name.trim(),
-        'role': 'user',
         'emailVerified': false,
         'privacyPolicyAccepted': false,
         'createdAt': FieldValue.serverTimestamp(),
@@ -104,7 +103,6 @@ class AuthRemoteDataSource {
           'email': result.user!.email,
           'displayName': result.user!.displayName,
           'photoUrl': result.user!.photoURL,
-          'role': 'user',
           'emailVerified': result.user!.emailVerified,
           'privacyPolicyAccepted': false,
           'createdAt': FieldValue.serverTimestamp(),
@@ -230,7 +228,6 @@ class AuthRemoteDataSource {
       'email': user.email,
       'displayName': user.displayName,
       'photoUrl': user.photoURL,
-      'role': 'user',
       'emailVerified': user.emailVerified,
       'privacyPolicyAccepted': false,
       'createdAt': DateTime.now().toIso8601String(),

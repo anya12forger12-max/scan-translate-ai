@@ -58,10 +58,9 @@ class OcrRemoteDataSource {
   }
 
   Future<Map<String, dynamic>> _processImage(InputImage inputImage) async {
+    final textRecognizer = TextRecognizer();
     try {
-      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
       final recognizedText = await textRecognizer.processImage(inputImage);
-      await textRecognizer.close();
 
       if (recognizedText.text.isEmpty) {
         throw const OcrException('No text found in the image.');
@@ -103,6 +102,8 @@ class OcrRemoteDataSource {
     } catch (e) {
       if (e is OcrException) rethrow;
       throw OcrException('Text recognition failed: ${e.toString()}');
+    } finally {
+      await textRecognizer.close();
     }
   }
 

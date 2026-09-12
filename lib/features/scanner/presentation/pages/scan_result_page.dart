@@ -33,10 +33,34 @@ class ScanResultPage extends StatelessWidget {
               },
               onOpen: result.decodedUrl != null
                   ? () async {
-                      final uri = Uri.parse(result.decodedUrl!);
+                      final url = result.decodedUrl!;
+                      final uri = Uri.parse(url);
                       if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri,
-                            mode: LaunchMode.externalApplication);
+                        if (!context.mounted) return;
+                        final shouldOpen = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Open External Link'),
+                            content: Text(
+                              'This link came from an untrusted scanned QR '
+                              'code. Do you want to open:\n$url',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Open'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (shouldOpen == true) {
+                          await launchUrl(uri,
+                              mode: LaunchMode.externalApplication);
+                        }
                       }
                     }
                   : null,

@@ -12,19 +12,28 @@ void main() async {
     debugPrint = (String? message, {int? wrapWidth}) {};
   }
 
+  bool firebaseReady = false;
   try {
     await Firebase.initializeApp();
+    firebaseReady = true;
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
 
   FlutterError.onError = (errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    if (firebaseReady) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    } else {
+      FlutterError.dumpErrorToConsole(errorDetails);
+    }
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
+    if (firebaseReady) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    }
+    return false;
   };
 
   final container = ProviderContainer(overrides: []);
