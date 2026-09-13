@@ -17,6 +17,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _emailSent = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -24,13 +25,24 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     super.dispose();
   }
 
-  void _handleReset() {
+  Future<void> _handleReset() async {
     if (_formKey.currentState!.validate()) {
       HapticUtils.mediumImpact();
-      ref.read(authProvider.notifier).sendPasswordResetEmail(
+      await ref.read(authProvider.notifier).sendPasswordResetEmail(
             _emailController.text.trim(),
           );
-      setState(() => _emailSent = true);
+      if (!mounted) return;
+      final authState = ref.read(authProvider);
+      setState(() {
+        if (authState.status == AuthStatus.error &&
+            authState.errorMessage != null) {
+          _errorMessage = authState.errorMessage;
+          _emailSent = false;
+        } else {
+          _emailSent = true;
+          _errorMessage = null;
+        }
+      });
     }
   }
 
@@ -96,6 +108,27 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                       semanticLabel: 'Email input field for password reset',
                     ),
                     const SizedBox(height: 24),
+                    if (_errorMessage != null) ...[
+                      Semantics(
+                        label: 'Password reset error',
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _errorMessage!,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.error,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     SizedBox(
                       height: 56,
                       child: ElevatedButton(

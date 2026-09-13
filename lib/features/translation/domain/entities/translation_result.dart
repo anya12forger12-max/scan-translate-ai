@@ -37,6 +37,7 @@ class Language {
   });
 
   static const List<Language> supported = [
+    Language(code: 'auto', name: 'Auto', nativeName: 'Auto'),
     Language(code: 'en', name: 'English', nativeName: 'English'),
     Language(code: 'es', name: 'Spanish', nativeName: 'Español'),
     Language(code: 'fr', name: 'French', nativeName: 'Français'),

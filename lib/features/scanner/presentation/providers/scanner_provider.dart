@@ -87,20 +87,21 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
   }
 
   BarcodeFormatType _mapFormat(String format) {
-    return switch (format.toUpperCase()) {
-      'QR' => BarcodeFormatType.qr,
-      'UPC_A' || 'UPC-A' => BarcodeFormatType.upcA,
-      'UPC_E' || 'UPC-E' => BarcodeFormatType.upcE,
-      'EAN_8' || 'EAN-8' => BarcodeFormatType.ean8,
-      'EAN_13' || 'EAN-13' => BarcodeFormatType.ean13,
-      'CODE_39' || 'CODE-39' => BarcodeFormatType.code39,
-      'CODE_93' || 'CODE-93' => BarcodeFormatType.code93,
-      'CODE_128' || 'CODE-128' => BarcodeFormatType.code128,
-      'CODABAR' => BarcodeFormatType.codabar,
-      'ITF' => BarcodeFormatType.itf,
-      'PDF_417' || 'PDF417' => BarcodeFormatType.pdf417,
-      'DATA_MATRIX' || 'DATA-MATRIX' => BarcodeFormatType.dataMatrix,
-      'AZTEC' => BarcodeFormatType.aztec,
+    return switch (format) {
+      'qrCode' || 'qr' || 'QR' => BarcodeFormatType.qr,
+      'ean13' || 'EAN_13' || 'EAN-13' => BarcodeFormatType.ean13,
+      'ean8' || 'EAN_8' || 'EAN-8' => BarcodeFormatType.ean8,
+      'upcA' || 'UPC_A' || 'UPC-A' => BarcodeFormatType.upcA,
+      'upcE' || 'UPC_E' || 'UPC-E' => BarcodeFormatType.upcE,
+      'code39' || 'CODE_39' || 'CODE-39' => BarcodeFormatType.code39,
+      'code93' || 'CODE_93' || 'CODE-93' => BarcodeFormatType.code93,
+      'code128' || 'CODE_128' || 'CODE-128' => BarcodeFormatType.code128,
+      'codabar' || 'CODABAR' => BarcodeFormatType.codabar,
+      'itf' || 'ITF' => BarcodeFormatType.itf,
+      'pdf417' || 'PDF_417' || 'PDF417' => BarcodeFormatType.pdf417,
+      'dataMatrix' || 'DATA_MATRIX' || 'DATA-MATRIX' =>
+        BarcodeFormatType.dataMatrix,
+      'aztec' || 'AZTEC' => BarcodeFormatType.aztec,
       _ => BarcodeFormatType.unknown,
     };
   }

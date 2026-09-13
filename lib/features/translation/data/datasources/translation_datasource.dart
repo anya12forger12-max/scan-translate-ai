@@ -25,7 +25,10 @@ class TranslationRemoteDataSource {
     final targetLang = _toTranslateLanguage(targetLanguage);
 
     if (sourceLang == null || targetLang == null) {
-      return _simulateTranslation(text, targetLanguage, sourceLanguage);
+      throw const TranslationException(
+        'Translation is not available for the selected language pair.',
+        code: 'unsupported-language-pair',
+      );
     }
 
     try {
@@ -47,8 +50,8 @@ class TranslationRemoteDataSource {
       } finally {
         await translator.close();
       }
-    } catch (_) {
-      return _simulateTranslation(text, targetLanguage, sourceLanguage);
+    } catch (e) {
+      throw TranslationException('Translation failed: ${e.toString()}');
     }
   }
 
@@ -113,20 +116,6 @@ class TranslationRemoteDataSource {
       if (language.bcpCode == code) return language;
     }
     return null;
-  }
-
-  Map<String, dynamic> _simulateTranslation(
-    String text,
-    String targetLanguage,
-    String? sourceLanguage,
-  ) {
-    return {
-      'originalText': text,
-      'translatedText': '[${targetLanguage.toUpperCase()}] $text',
-      'sourceLanguage': sourceLanguage ?? 'auto',
-      'targetLanguage': targetLanguage,
-      'confidence': 0.5,
-    };
   }
 
   String _simpleDetect(String text) {

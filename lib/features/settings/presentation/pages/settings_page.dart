@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -8,11 +10,33 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/settings_tile.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() => _version = info.version);
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final authState = ref.watch(authProvider);
     final user = authState.user;
@@ -41,12 +65,24 @@ class SettingsPage extends ConsumerWidget {
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                      backgroundImage: user.photoUrl != null
-                          ? NetworkImage(user.photoUrl!)
-                          : null,
-                      child: user.photoUrl == null
-                          ? Icon(Icons.person, color: AppColors.primary)
-                          : null,
+                      child: user.photoUrl != null
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: user.photoUrl!,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                placeholder: (_, _) => const Icon(
+                                  Icons.person,
+                                  color: AppColors.primary,
+                                ),
+                                errorWidget: (_, _, _) => const Icon(
+                                  Icons.person,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.person, color: AppColors.primary),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -117,7 +153,7 @@ class SettingsPage extends ConsumerWidget {
           SettingsTile(
             icon: Icons.info_outline,
             title: 'About',
-            subtitle: 'Version ${AppConstants.appVersion}',
+            subtitle: 'Version ${_version ?? AppConstants.appVersion}',
             onTap: () => _showAboutDialog(context),
           ),
           SettingsTile(
@@ -146,7 +182,7 @@ class SettingsPage extends ConsumerWidget {
             label: 'App version information',
             child: Center(
               child: Text(
-                '${AppConstants.appName} v${AppConstants.appVersion}',
+                '${AppConstants.appName} v${_version ?? AppConstants.appVersion}',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -270,7 +306,7 @@ class SettingsPage extends ConsumerWidget {
     showAboutDialog(
       context: context,
       applicationName: AppConstants.appName,
-      applicationVersion: AppConstants.appVersion,
+      applicationVersion: _version ?? AppConstants.appVersion,
       applicationIcon: const Icon(Icons.translate_rounded, size: 48, color: AppColors.primary),
       children: [
         const Text('Scan QR codes, barcodes, recognize text, and translate content with AI-powered technology.'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -66,15 +67,27 @@ class HomePage extends ConsumerWidget {
                               backgroundColor: AppColors.primary.withValues(
                                 alpha: 0.1,
                               ),
-                              backgroundImage: user?.photoUrl != null
-                                  ? NetworkImage(user!.photoUrl!)
-                                  : null,
-                              child: user?.photoUrl == null
-                                  ? Icon(
+                              child: user?.photoUrl != null
+                                  ? ClipOval(
+                                      child: CachedNetworkImage(
+                                        imageUrl: user!.photoUrl!,
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, _) => const Icon(
+                                          Icons.person_rounded,
+                                          color: AppColors.primary,
+                                        ),
+                                        errorWidget: (_, _, _) => const Icon(
+                                          Icons.person_rounded,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
                                       Icons.person_rounded,
                                       color: AppColors.primary,
-                                    )
-                                  : null,
+                                    ),
                             ),
                           ),
                         ],

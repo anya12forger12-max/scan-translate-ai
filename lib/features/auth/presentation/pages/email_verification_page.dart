@@ -53,11 +53,17 @@ class EmailVerificationPage extends ConsumerWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {
-                      ref.read(authProvider.notifier).sendEmailVerification();
+                    onPressed: () async {
+                      final notifier = ref.read(authProvider.notifier);
+                      await notifier.sendEmailVerification();
+                      if (!context.mounted) return;
+                      final authState = ref.read(authProvider);
+                      final message = authState.errorMessage;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Verification email sent!'),
+                        SnackBar(
+                          content: Text(
+                            message ?? 'Verification email sent!',
+                          ),
                         ),
                       );
                     },

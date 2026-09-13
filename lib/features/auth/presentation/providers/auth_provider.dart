@@ -103,22 +103,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signInWithGoogle() async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
-    final result = await _authRepository.signInWithGoogle();
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
-      (user) {
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          user: user,
-          clearError: true,
-        );
-      },
-    );
+    try {
+      final result = await _authRepository.signInWithGoogle();
+      result.fold(
+        (failure) {
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          );
+        },
+        (user) {
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            user: user,
+            clearError: true,
+          );
+        },
+      );
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'Google sign-in failed: ${e.toString()}',
+      );
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

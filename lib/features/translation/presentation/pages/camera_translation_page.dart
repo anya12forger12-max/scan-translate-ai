@@ -87,6 +87,7 @@ class CameraTranslationPage extends ConsumerWidget {
                             ocrResult.fold(
                               (failure) {
                                 ref.read(ocrProvider.notifier).setError(failure.message);
+                                transNotifier.setError(failure.message);
                               },
                               (result) {
                                 ref.read(ocrProvider.notifier).setResult(result);
@@ -121,6 +122,7 @@ class CameraTranslationPage extends ConsumerWidget {
                             ocrResult.fold(
                               (failure) {
                                 ref.read(ocrProvider.notifier).setError(failure.message);
+                                transNotifier.setError(failure.message);
                               },
                               (result) {
                                 ref.read(ocrProvider.notifier).setResult(result);

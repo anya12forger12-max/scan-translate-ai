@@ -8,6 +8,7 @@ import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_display.dart';
 import '../../../../core/widgets/loading_display.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
+import '../../../../app/di/providers.dart';
 import '../../domain/entities/history_item.dart';
 import '../providers/history_provider.dart';
 import '../widgets/history_filter.dart';
@@ -55,7 +56,28 @@ class HistoryPage extends ConsumerWidget {
                   );
                   if (confirm == true) {
                     HapticUtils.mediumImpact();
-                    historyNotifier.clearAll();
+                    final outcome =
+                        await ref.read(historyRepositoryProvider).clearHistory();
+                    if (!context.mounted) return;
+                    outcome.fold(
+                      (failure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Failed to clear history: ${failure.message}',
+                            ),
+                          ),
+                        );
+                      },
+                      (_) {
+                        historyNotifier.clearAll();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('History cleared'),
+                          ),
+                        );
+                      },
+                    );
                   }
                 },
                 tooltip: 'Clear all history',
@@ -150,11 +172,44 @@ class HistoryPage extends ConsumerWidget {
             onTap: () {
               _showDetailDialog(context, item);
             },
-            onToggleFavorite: () {
-              ref.read(historyProvider.notifier).toggleFavorite(item.id);
+            onToggleFavorite: () async {
+              final outcome = await ref
+                  .read(historyRepositoryProvider)
+                  .toggleFavorite(item.id, !item.isFavorite);
+              if (!context.mounted) return;
+              outcome.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to update favorite: ${failure.message}'),
+                    ),
+                  );
+                },
+                (_) {
+                  ref.read(historyProvider.notifier).toggleFavorite(item.id);
+                },
+              );
             },
-            onDelete: () {
-              ref.read(historyProvider.notifier).removeItem(item.id);
+            onDelete: () async {
+              final outcome = await ref
+                  .read(historyRepositoryProvider)
+                  .deleteItem(item.id);
+              if (!context.mounted) return;
+              outcome.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete: ${failure.message}'),
+                    ),
+                  );
+                },
+                (_) {
+                  ref.read(historyProvider.notifier).removeItem(item.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Deleted from history')),
+                  );
+                },
+              );
             },
           );
         },

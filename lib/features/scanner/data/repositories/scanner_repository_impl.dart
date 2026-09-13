@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/errors/exceptions.dart';
@@ -56,10 +57,23 @@ class ScannerRepositoryImpl implements ScannerRepository {
     try {
       final data = await remoteDataSource.getScanHistory(limit: limit, type: type);
       final results = data.map((json) {
-        return ScanResultModel.fromFirestore(
-          // ignore: missing_return
-          () {} as dynamic, // simplified for demo
-        ).toEntity();
+        return ScanResult(
+          id: json['id'] as String? ?? '',
+          scanType: ScanType.values.firstWhere(
+            (e) => e.name == json['scanType'],
+            orElse: () => ScanType.qr,
+          ),
+          formatType: BarcodeFormatType.values.firstWhere(
+            (e) => e.name == json['formatType'],
+            orElse: () => BarcodeFormatType.unknown,
+          ),
+          rawValue: json['rawValue'] as String? ?? '',
+          displayValue: json['displayValue'] as String?,
+          scannedAt: (json['scannedAt'] is Timestamp)
+              ? (json['scannedAt'] as Timestamp).toDate()
+              : DateTime.now(),
+          isFavorite: json['isFavorite'] as bool? ?? false,
+        );
       }).toList();
       return Right(results);
     } on AppException catch (e) {

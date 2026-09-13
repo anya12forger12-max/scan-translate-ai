@@ -120,6 +120,8 @@ class AuthRemoteDataSource {
       return await _getUserData(result.user!);
     } on firebase_auth.FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } catch (e) {
+      throw AuthException('Google sign-in failed: ${e.toString()}');
     }
   }
 

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
 import '../../../../core/widgets/error_display.dart';
+import '../../../../app/di/providers.dart';
 import '../providers/scanner_provider.dart';
 import '../widgets/scanner_overlay.dart';
 import '../widgets/scan_result_card.dart';
@@ -77,11 +78,26 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
           onShare: () {
             Share.share(scannerState.result!.rawValue);
           },
-          onSave: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Result saved to history')),
+          onSave: () async {
+            final result = scannerState.result!;
+            final outcome =
+                await ref.read(scannerRepositoryProvider).saveScanResult(result);
+            if (!mounted) return;
+            outcome.fold(
+              (failure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to save: ${failure.message}'),
+                  ),
+                );
+              },
+              (_) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Result saved to history')),
+                );
+                scannerNotifier.resetScanner();
+              },
             );
-            scannerNotifier.resetScanner();
           },
           onDismiss: () => scannerNotifier.resetScanner(),
         ),
@@ -103,7 +119,13 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
               ),
               onPressed: () {
                 scannerNotifier.toggleTorch();
-                _scannerController?.toggleTorch();
+                _scannerController?.toggleTorch().catchError((Object e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Flash not available')),
+                    );
+                  }
+                });
               },
               tooltip: 'Toggle flashlight',
             ),

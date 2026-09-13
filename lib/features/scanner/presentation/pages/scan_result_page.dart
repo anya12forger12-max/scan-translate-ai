@@ -4,18 +4,19 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
 import '../../../../core/widgets/loading_display.dart';
+import '../../../../app/di/providers.dart';
 import '../../domain/entities/scan_result.dart';
 import '../widgets/scan_result_card.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ScanResultPage extends StatelessWidget {
+class ScanResultPage extends ConsumerWidget {
   final ScanResult result;
 
   const ScanResultPage({super.key, required this.result});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text('${result.formatType.displayName} Result'),
@@ -64,11 +65,25 @@ class ScanResultPage extends StatelessWidget {
                       }
                     }
                   : null,
-              onSave: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Saved to history')),
+              onSave: () async {
+                final outcome =
+                    await ref.read(scannerRepositoryProvider).saveScanResult(result);
+                if (!context.mounted) return;
+                outcome.fold(
+                  (failure) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to save: ${failure.message}'),
+                      ),
+                    );
+                  },
+                  (_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Saved to history')),
+                    );
+                    Navigator.pop(context);
+                  },
                 );
-                Navigator.pop(context);
               },
             ),
           ],

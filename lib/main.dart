@@ -8,10 +8,6 @@ import 'app/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (kReleaseMode) {
-    debugPrint = (String? message, {int? wrapWidth}) {};
-  }
-
   bool firebaseReady = false;
   try {
     await Firebase.initializeApp();
