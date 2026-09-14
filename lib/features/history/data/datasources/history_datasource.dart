@@ -30,9 +30,7 @@ class HistoryRemoteDataSource {
         query = query.where('scanType', isEqualTo: type);
       }
 
-      if (limit != null) {
-        query = query.limit(limit);
-      }
+      query = query.limit(limit ?? 100);
 
       final snapshot = await query.get();
       return snapshot.docs.map((doc) {
@@ -129,6 +127,7 @@ class HistoryRemoteDataSource {
           .collection(FirebaseConstants.scanHistoryCollection)
           .where('userId', isEqualTo: userId)
           .orderBy('scannedAt', descending: true)
+          .limit(200)
           .get();
 
       final results = snapshot.docs.where((doc) {

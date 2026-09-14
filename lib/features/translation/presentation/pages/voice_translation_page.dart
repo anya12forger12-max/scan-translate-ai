@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -68,6 +70,8 @@ class _VoiceTranslationPageState extends ConsumerState<VoiceTranslationPage> {
 
   void _stopListening() {
     setState(() => _isListening = false);
+    final datasource = ref.read(translationRemoteDataSourceProvider);
+    unawaited(datasource.cancelCurrentSpeechRecognition());
   }
 
   void _translateText(String text) {

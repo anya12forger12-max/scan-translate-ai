@@ -1,11 +1,18 @@
+import 'dart:async';
+
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../../core/errors/exceptions.dart';
 
 class TranslationRemoteDataSource {
+  static final OnDeviceTranslatorModelManager _modelManager =
+      OnDeviceTranslatorModelManager();
+
   final FlutterTts flutterTts;
   final stt.SpeechToText speechToText;
+
+  Completer<void>? _cancelSpeechCompleter;
 
   TranslationRemoteDataSource({
     required this.flutterTts,
@@ -32,9 +39,13 @@ class TranslationRemoteDataSource {
     }
 
     try {
-      final modelManager = OnDeviceTranslatorModelManager();
-      await modelManager.downloadModel(sourceLang.bcpCode);
-      await modelManager.downloadModel(targetLang.bcpCode);
+      final modelManager = _modelManager;
+      if (!await modelManager.isModelDownloaded(sourceLang.bcpCode)) {
+        await modelManager.downloadModel(sourceLang.bcpCode);
+      }
+      if (!await modelManager.isModelDownloaded(targetLang.bcpCode)) {
+        await modelManager.downloadModel(targetLang.bcpCode);
+      }
 
       final translator =
           OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
@@ -62,33 +73,82 @@ class TranslationRemoteDataSource {
   Future<String> speechToTextConverter({
     String? language,
   }) async {
+    final resultCompleter = Completer<String>();
+    final cancelCompleter = _cancelSpeechCompleter = Completer<void>();
+    var stopRequested = false;
+
+    Future<void> requestStop() async {
+      if (stopRequested) return;
+      stopRequested = true;
+      try {
+        await speechToText.stop();
+      } catch (_) {
+        // The recognizer may already be shutting down (e.g. listenFor elapsed).
+      }
+    }
+
     try {
       final available = await speechToText.initialize();
       if (!available) {
         throw const SpeechException('Speech recognition not available.');
       }
 
-      String? recognizedText;
-      await speechToText.listen(
-        onResult: (result) {
-          recognizedText = result.recognizedWords;
-        },
-        localeId: language,
-        listenFor: const Duration(seconds: 10),
-        partialResults: false,
-      );
-
-      await Future.delayed(const Duration(seconds: 10));
-      await speechToText.stop();
-
-      if (recognizedText == null || recognizedText!.isEmpty) {
+      if (cancelCompleter.isCompleted) {
         throw const SpeechException('No speech detected.');
       }
 
-      return recognizedText!;
+      await speechToText.listen(
+        onResult: (result) {
+          if (!result.finalResult || resultCompleter.isCompleted) return;
+          resultCompleter.complete(result.recognizedWords.trim());
+          requestStop();
+        },
+        localeId: language,
+        listenFor: const Duration(seconds: 15),
+        partialResults: false,
+      );
+
+      if (cancelCompleter.isCompleted) {
+        await requestStop();
+        throw const SpeechException('No speech detected.');
+      }
+
+      final recognizedText = await Future.any<String>([
+        resultCompleter.future,
+        cancelCompleter.future.then((_) => ''),
+      ]).timeout(
+        const Duration(seconds: 16),
+        onTimeout: () {
+          requestStop();
+          return '';
+        },
+      );
+
+      if (recognizedText.isEmpty) {
+        throw const SpeechException('No speech detected.');
+      }
+
+      return recognizedText;
     } catch (e) {
       if (e is SpeechException) rethrow;
       throw SpeechException('Speech recognition failed: ${e.toString()}');
+    } finally {
+      if (identical(_cancelSpeechCompleter, cancelCompleter)) {
+        _cancelSpeechCompleter = null;
+      }
+    }
+  }
+
+  /// Cancels the active speech recognition session, if any.
+  Future<void> cancelCurrentSpeechRecognition() async {
+    final cancelCompleter = _cancelSpeechCompleter;
+    if (cancelCompleter != null && !cancelCompleter.isCompleted) {
+      cancelCompleter.complete();
+    }
+    try {
+      await speechToText.stop();
+    } catch (_) {
+      // No active session or stop already in progress; nothing to cancel.
     }
   }
 
