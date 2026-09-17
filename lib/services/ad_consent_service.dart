@@ -17,9 +17,12 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
 /// available moments after the info update still gets shown the form. Once a
-/// consent form has actually been presented to the user, the outcome of that
-/// presentation is final for this call: a user who declined or dismissed the
-/// form is not shown it again four seconds later. A timeout covers only the
+/// consent form has actually been presented to the user (show() succeeded),
+/// the outcome of that presentation is final for this call: a user who
+/// declined or dismissed the form is not shown it again four seconds later.
+/// If the form fails to be presented (e.g. the current activity was not
+/// ready), that is a transient condition like any other — it is retried and
+/// the user is still offered the form. A timeout covers only the
 /// non-interactive plumbing (info update, form download) — the consent form
 /// itself is shown without a timeout so a user can take as long as they need
 /// to decide.
@@ -98,7 +101,13 @@ class AdConsentService {
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
         final form = await _loadForm().timeout(_plumbingTimeout);
-        await _showForm(form);
+        final presented = await _showForm(form);
+        if (!presented) {
+          // The form failed to present for the user (e.g. the current
+          // activity was not ready). It never reached the user, so this is a
+          // transient failure: retry shortly so the form is still offered.
+          return (allowed: false, formShown: false);
+        }
         final after = await consent.getConsentStatus();
         if (after == ConsentStatus.required || after == ConsentStatus.unknown) {
           return (allowed: false, formShown: true);
@@ -152,11 +161,14 @@ class AdConsentService {
     return completer.future;
   }
 
-  Future<void> _showForm(ConsentForm form) {
-    final completer = Completer<void>();
-    form.show((_) {
+  Future<bool> _showForm(ConsentForm form) {
+    final completer = Completer<bool>();
+    form.show((error) {
       if (!completer.isCompleted) {
-        completer.complete();
+        // A non-null FormError means the form could not be presented
+        // (activity not ready, e.g.), so it never reached the user. That is
+        // a transient condition, not a user decision.
+        completer.complete(error == null);
       }
     });
     return completer.future;
