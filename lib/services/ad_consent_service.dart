@@ -6,16 +6,28 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// Gates ad serving behind Google UMP (GDPR) consent.
 ///
-/// Ads are only served once the UMP flow reaches a definite "can request ads"
-/// state. The flow fails closed: if consent status cannot be determined (e.g.
-/// platform/plugin/network errors, or a required consent form was not
-/// resolvable), ads stay off and the flow is retried on the next call. The
-/// result is cached only when it is decisive, so consent granted later in the
-/// session is honored.
+/// Ads are served only when the UMP flow reaches a definitive "can request
+/// ads" outcome: consent obtained, or consent not required. Everything else
+/// — platform/plugin/network errors, an unresolved consent status, or a
+/// required consent form that is not available yet — fails closed (returns
+/// false) and is NOT cached, so the flow re-runs on the next request and a
+/// consent decision made later in the session is honored. A definitive
+/// "allowed" result is cached for the session.
+///
+/// Inside a single call the flow is retried a bounded number of times with a
+/// short delay so a first-launch EEA user whose consent form only becomes
+/// available moments after the info update still gets shown the form. A
+/// timeout covers only the non-interactive plumbing (info update, form
+/// download) — the consent form itself is shown without a timeout so a user
+/// can take as long as they need to decide.
 class AdConsentService {
   AdConsentService._();
 
   static final AdConsentService instance = AdConsentService._();
+
+  static const Duration _plumbingTimeout = Duration(seconds: 20);
+  static const Duration _retryDelay = Duration(seconds: 4);
+  static const int _maxAttempts = 2;
 
   Completer<bool>? _inFlight;
   bool _finished = false;
@@ -33,10 +45,24 @@ class AdConsentService {
     final completer = Completer<bool>();
     _inFlight = completer;
     try {
-      final result = await _run();
-      _finished = true;
-      _result = result;
-      completer.complete(result);
+      var allowed = false;
+      for (var attempt = 1; attempt <= _maxAttempts && !allowed; attempt++) {
+        if (attempt > 1) {
+          await Future<void>.delayed(_retryDelay);
+        }
+        try {
+          allowed = await _run();
+        } catch (error, stackTrace) {
+          debugPrint(
+              'AdConsentService: consent flow failed on attempt $attempt: '
+              '$error\n$stackTrace');
+        }
+      }
+      if (allowed) {
+        _finished = true;
+        _result = true;
+      }
+      completer.complete(allowed);
     } catch (error, stackTrace) {
       debugPrint(
           'AdConsentService: consent flow failed, keeping ads off: '
@@ -57,12 +83,12 @@ class AdConsentService {
     }
 
     final consent = ConsentInformation.instance;
-    await _updateConsentInfo(consent);
+    await _updateConsentInfo(consent).timeout(_plumbingTimeout);
 
     final status = await consent.getConsentStatus();
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
-        final form = await _loadForm();
+        final form = await _loadForm().timeout(_plumbingTimeout);
         await _showForm(form);
       }
       final after = await consent.getConsentStatus();
