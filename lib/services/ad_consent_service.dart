@@ -16,10 +16,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
-/// available moments after the info update still gets shown the form. A
-/// timeout covers only the non-interactive plumbing (info update, form
-/// download) — the consent form itself is shown without a timeout so a user
-/// can take as long as they need to decide.
+/// available moments after the info update still gets shown the form. Once a
+/// consent form has actually been presented to the user, the outcome of that
+/// presentation is final for this call: a user who declined or dismissed the
+/// form is not shown it again four seconds later. A timeout covers only the
+/// non-interactive plumbing (info update, form download) — the consent form
+/// itself is shown without a timeout so a user can take as long as they need
+/// to decide.
 class AdConsentService {
   AdConsentService._();
 
@@ -46,12 +49,18 @@ class AdConsentService {
     _inFlight = completer;
     try {
       var allowed = false;
-      for (var attempt = 1; attempt <= _maxAttempts && !allowed; attempt++) {
+      for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
         if (attempt > 1) {
           await Future<void>.delayed(_retryDelay);
         }
         try {
-          allowed = await _run();
+          final outcome = await _run();
+          allowed = outcome.allowed;
+          if (allowed || outcome.formShown) {
+            // Definitive: consent granted, or the user already saw the form
+            // and the outcome is decided — do not present it again.
+            break;
+          }
         } catch (error, stackTrace) {
           debugPrint(
               'AdConsentService: consent flow failed on attempt $attempt: '
@@ -74,12 +83,12 @@ class AdConsentService {
     return completer.future;
   }
 
-  Future<bool> _run() async {
+  Future<({bool allowed, bool formShown})> _run() async {
     if (kIsWeb) {
-      return true;
+      return (allowed: true, formShown: false);
     }
     if (!Platform.isAndroid && !Platform.isIOS) {
-      return true;
+      return (allowed: true, formShown: false);
     }
 
     final consent = ConsentInformation.instance;
@@ -90,17 +99,22 @@ class AdConsentService {
       if (await consent.isConsentFormAvailable()) {
         final form = await _loadForm().timeout(_plumbingTimeout);
         await _showForm(form);
+        final after = await consent.getConsentStatus();
+        if (after == ConsentStatus.required || after == ConsentStatus.unknown) {
+          return (allowed: false, formShown: true);
+        }
+        return (allowed: await consent.canRequestAds(), formShown: true);
       }
-      final after = await consent.getConsentStatus();
-      if (after == ConsentStatus.required || after == ConsentStatus.unknown) {
-        return false;
-      }
-      return await consent.canRequestAds();
+      // Consent is required but the form is not available yet. This is a
+      // transient condition: retry shortly so a form that becomes available
+      // right after the info update is still presented.
+      return (allowed: false, formShown: false);
     }
     if (status == ConsentStatus.unknown) {
-      return false;
+      // Status not resolved yet. Transient: retry shortly.
+      return (allowed: false, formShown: false);
     }
-    return await consent.canRequestAds();
+    return (allowed: await consent.canRequestAds(), formShown: false);
   }
 
   Future<void> _updateConsentInfo(ConsentInformation consent) {
