@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../services/ad_consent_service.dart';
+
 /// Adaptive banner ad shown at the bottom of the home screen.
 ///
 /// Uses the real AdMob banner unit for scan-translate-ai.
@@ -25,35 +27,45 @@ class _AdBannerState extends State<AdBanner> {
   }
 
   Future<void> _loadBanner() async {
-    await MobileAds.instance.initialize();
+    try {
+      final canServe = await AdConsentService.instance.ensureConsent();
+      if (!canServe) {
+        debugPrint('AdBanner: consent not obtained, skipping ad');
+        return;
+      }
 
-    final adapter = BannerAd(
-      adUnitId: AdBanner.adUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (!mounted) {
+      await MobileAds.instance.initialize();
+
+      final adapter = BannerAd(
+        adUnitId: AdBanner.adUnitId,
+        size: AdSize.banner,
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            if (!mounted) {
+              ad.dispose();
+              return;
+            }
+            setState(() {
+              _banner = ad as BannerAd;
+              _loaded = true;
+            });
+          },
+          onAdFailedToLoad: (ad, error) {
             ad.dispose();
-            return;
-          }
-          setState(() {
-            _banner = ad as BannerAd;
-            _loaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          if (mounted) {
-            setState(() => _loaded = false);
-          }
-        },
-        onAdImpression: (_) {},
-        onAdClicked: (_) {},
-      ),
-    );
+            if (mounted) {
+              setState(() => _loaded = false);
+            }
+          },
+          onAdImpression: (_) {},
+          onAdClicked: (_) {},
+        ),
+      );
 
-    await adapter.load();
+      await adapter.load();
+    } catch (error) {
+      debugPrint('AdBanner: failed to load banner: $error');
+    }
   }
 
   @override
