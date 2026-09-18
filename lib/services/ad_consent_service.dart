@@ -26,7 +26,12 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// recorded decision must not seal the user's fate for the whole session:
 /// once the delay elapses the form is offered again, so a user whose status
 /// is still unresolved can still make a choice instead of being silently
-/// blocked with the flow never able to reach a decision.
+/// blocked with the flow never able to reach a decision. The delay is
+/// measured on a monotonic stopwatch, never wall-clock time: device clock
+/// changes (NTP correction, DST, timezone travel, a user fixing their clock)
+/// can neither fast-forward the cooldown (re-bombarding a user who just
+/// dismissed) nor extend it forever (silently re-latching the blocked
+/// session).
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
@@ -50,10 +55,12 @@ class AdConsentService {
   static const int _maxAttempts = 2;
   static const Duration _minDelayBetweenPresentations = Duration(minutes: 10);
 
+  final Stopwatch _clock = Stopwatch()..start();
+
   Completer<bool>? _inFlight;
   bool _finished = false;
   bool _result = false;
-  DateTime? _lastFormShownAt;
+  Duration? _lastFormShownElapsed;
 
   /// Returns whether ads may be requested. Never throws.
   Future<bool> ensureConsent() async {
@@ -122,10 +129,9 @@ class AdConsentService {
     final status = await consent.getConsentStatus();
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
-        final lastShown = _lastFormShownAt;
+        final lastShown = _lastFormShownElapsed;
         final canPresent = lastShown == null ||
-            DateTime.now().difference(lastShown) >=
-                _minDelayBetweenPresentations;
+            _clock.elapsed - lastShown >= _minDelayBetweenPresentations;
         if (canPresent) {
           final form = await _loadForm().timeout(_plumbingTimeout);
           final presented = await _showForm(form);
@@ -136,7 +142,7 @@ class AdConsentService {
             // offered.
             return (allowed: false, formShown: false);
           }
-          _lastFormShownAt = DateTime.now();
+          _lastFormShownElapsed = _clock.elapsed;
         }
         // Re-check the status after the presentation (or after a recent
         // presentation). A form that was shown but left the status unresolved
