@@ -8,11 +8,14 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 ///
 /// Ads are served only when the UMP flow reaches a definitive "can request
 /// ads" outcome: consent obtained, or consent not required. Everything else
-/// — platform/plugin/network errors, an unresolved consent status, or a
-/// required consent form that is not available yet — fails closed (returns
-/// false) and is NOT cached, so the flow re-runs on the next request and a
-/// consent decision made later in the session is honored. A definitive
-/// "allowed" result is cached for the session.
+/// fails closed (ads stay off). The outcome is cached once it is decisive:
+/// an EEA user who has actually been shown the consent form has made a
+/// decision in either direction, and that decision is honored for the whole
+/// session — a user who declined or dismissed the form is never shown it
+/// again on a later call. Only requests that never reached a decision (the
+/// flow could not run, the form was not available/presented, status was
+/// unresolved) are NOT cached, so the flow re-runs on the next request and a
+/// consent decision made later in the session is honored.
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
@@ -52,6 +55,7 @@ class AdConsentService {
     _inFlight = completer;
     try {
       var allowed = false;
+      var formShown = false;
       for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
         if (attempt > 1) {
           await Future<void>.delayed(_retryDelay);
@@ -59,9 +63,11 @@ class AdConsentService {
         try {
           final outcome = await _run();
           allowed = outcome.allowed;
-          if (allowed || outcome.formShown) {
-            // Definitive: consent granted, or the user already saw the form
-            // and the outcome is decided — do not present it again.
+          formShown = outcome.formShown;
+          if (allowed || formShown) {
+            // Definitive: consent granted, or the user actually saw the form
+            // and the outcome is decided. Do not present the form again, and
+            // do not re-run the flow later in this session.
             break;
           }
         } catch (error, stackTrace) {
@@ -70,9 +76,13 @@ class AdConsentService {
               '$error\n$stackTrace');
         }
       }
-      if (allowed) {
+      if (allowed || formShown) {
+        // A definitive outcome, in either direction, is cached for the
+        // session: a user who has seen the form and declined is never shown
+        // it again on a later call. Only transient blocks (the form was never
+        // presented) stay uncached so the flow can re-run until decisive.
         _finished = true;
-        _result = true;
+        _result = allowed;
       }
       completer.complete(allowed);
     } catch (error, stackTrace) {
