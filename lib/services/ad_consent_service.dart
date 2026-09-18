@@ -26,12 +26,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// recorded decision must not seal the user's fate for the whole session:
 /// once the delay elapses the form is offered again, so a user whose status
 /// is still unresolved can still make a choice instead of being silently
-/// blocked with the flow never able to reach a decision. The delay is
-/// measured on a monotonic stopwatch, never wall-clock time: device clock
-/// changes (NTP correction, DST, timezone travel, a user fixing their clock)
-/// can neither fast-forward the cooldown (re-bombarding a user who just
-/// dismissed) nor extend it forever (silently re-latching the blocked
-/// session).
+/// /// blocked with the flow never able to reach a decision. The delay is measured
+/// as the larger of a wall-clock elapsed time and a monotonic stopwatch
+/// elapsed time: the wall clock counts time spent suspended (a phone locked
+/// for an hour must let the cooldown elapse), while the monotonic stopwatch is
+/// immune to wall-clock jumps in either direction (a clock set backwards must
+/// not extend the cooldown forever and re-latch the session; a clock set
+/// forwards must not re-present a form the user just dismissed).
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
@@ -60,6 +61,7 @@ class AdConsentService {
   Completer<bool>? _inFlight;
   bool _finished = false;
   bool _result = false;
+  DateTime? _lastFormShownAt;
   Duration? _lastFormShownElapsed;
 
   /// Returns whether ads may be requested. Never throws.
@@ -129,9 +131,11 @@ class AdConsentService {
     final status = await consent.getConsentStatus();
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
-        final lastShown = _lastFormShownElapsed;
-        final canPresent = lastShown == null ||
-            _clock.elapsed - lastShown >= _minDelayBetweenPresentations;
+        final lastShownAt = _lastFormShownAt;
+        final lastShownElapsed = _lastFormShownElapsed;
+        final canPresent = lastShownAt == null ||
+            _elapsedSinceFormShown(lastShownAt, lastShownElapsed) >=
+                _minDelayBetweenPresentations;
         if (canPresent) {
           final form = await _loadForm().timeout(_plumbingTimeout);
           final presented = await _showForm(form);
@@ -142,6 +146,7 @@ class AdConsentService {
             // offered.
             return (allowed: false, formShown: false);
           }
+          _lastFormShownAt = DateTime.now();
           _lastFormShownElapsed = _clock.elapsed;
         }
         // Re-check the status after the presentation (or after a recent
@@ -167,6 +172,27 @@ class AdConsentService {
       return (allowed: false, formShown: false);
     }
     return (allowed: await consent.canRequestAds(), formShown: false);
+  }
+
+  /// Elapsed time since the consent form was last shown, on the clock that
+  /// reports more time. The wall clock counts time spent suspended/background
+  /// (a phone locked or backgrounded for an hour must let the cooldown
+  /// elapse; a Stopwatch alone would freeze during suspend and re-latch the
+  /// session); the monotonic stopwatch is immune to wall-clock jumps (a clock
+  /// set backwards must not extend the cooldown forever). Taking the larger of
+  /// the two, the session can never be silently re-latched by clock drift.
+  ///
+  /// Residual edge: an extreme forward clock jump could make the wall clock
+  /// look like the cooldown elapsed and re-offer the form to a still-undecided
+  /// user who dismissed it moments ago. That re-offer goes through the full
+  /// UMP flow first — if consent was actually given the status is obtained and
+  /// no form is shown — so a user who decided is never re-prompted, only
+  /// pure dismissal is at worst re-offered early.
+  Duration _elapsedSinceFormShown(DateTime shownAt, Duration? shownElapsed) {
+    final wall = DateTime.now().difference(shownAt);
+    final monotonic =
+        shownElapsed == null ? Duration.zero : _clock.elapsed - shownElapsed;
+    return wall > monotonic ? wall : monotonic;
   }
 
   Future<void> _updateConsentInfo(ConsentInformation consent) {
