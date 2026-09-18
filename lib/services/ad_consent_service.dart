@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// Gates ad serving behind Google UMP (GDPR) consent.
@@ -26,13 +27,21 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// recorded decision must not seal the user's fate for the whole session:
 /// once the delay elapses the form is offered again, so a user whose status
 /// is still unresolved can still make a choice instead of being silently
-/// /// blocked with the flow never able to reach a decision. The delay is measured
-/// as the larger of a wall-clock elapsed time and a monotonic stopwatch
-/// elapsed time: the wall clock counts time spent suspended (a phone locked
-/// for an hour must let the cooldown elapse), while the monotonic stopwatch is
-/// immune to wall-clock jumps in either direction (a clock set backwards must
-/// not extend the cooldown forever and re-latch the session; a clock set
-/// forwards must not re-present a form the user just dismissed).
+/// /// blocked with the flow never able to reach a decision.
+///
+/// The cooldown is measured on two clocks reconciled into one. A monotonic
+/// stopwatch supplies the base elapsed time, which is immune to wall-clock
+/// jumps in either direction: a clock set forwards must not re-present a form
+/// the user just dismissed moments ago, and a clock set backwards must not
+/// extend the cooldown forever and re-latch the session. On top of that base,
+/// the wall clock contributes ONLY the time the app was demonstrably
+/// background-suspended: when a pause/resume cycle is observed through the
+/// widget binding, the wall clock's surplus over the frozen stopwatch is real
+/// suspension time, and only that surplus is credited. A phone locked or
+/// backgrounded for an hour therefore lets the cooldown elapse instead of
+/// re-latching the session, while a wall-clock jump that is not accompanied by
+/// a real suspend contributes nothing — so no clock manipulation can shorten
+/// the cooldown.
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
@@ -46,7 +55,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// non-interactive plumbing (info update, form download) — the consent form
 /// itself is shown without a timeout so a user can take as long as they need
 /// to decide.
-class AdConsentService {
+class AdConsentService with WidgetsBindingObserver {
   AdConsentService._();
 
   static final AdConsentService instance = AdConsentService._();
@@ -61,11 +70,16 @@ class AdConsentService {
   Completer<bool>? _inFlight;
   bool _finished = false;
   bool _result = false;
-  DateTime? _lastFormShownAt;
   Duration? _lastFormShownElapsed;
+
+  bool _observing = false;
+  Duration? _pausedElapsed;
+  DateTime? _pausedAt;
+  Duration _suspendedCredit = Duration.zero;
 
   /// Returns whether ads may be requested. Never throws.
   Future<bool> ensureConsent() async {
+    _ensureObserving();
     if (_finished) {
       return _result;
     }
@@ -131,10 +145,9 @@ class AdConsentService {
     final status = await consent.getConsentStatus();
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
-        final lastShownAt = _lastFormShownAt;
         final lastShownElapsed = _lastFormShownElapsed;
-        final canPresent = lastShownAt == null ||
-            _elapsedSinceFormShown(lastShownAt, lastShownElapsed) >=
+        final canPresent = lastShownElapsed == null ||
+            _elapsedSinceFormShown(lastShownElapsed) >=
                 _minDelayBetweenPresentations;
         if (canPresent) {
           final form = await _loadForm().timeout(_plumbingTimeout);
@@ -146,8 +159,10 @@ class AdConsentService {
             // offered.
             return (allowed: false, formShown: false);
           }
-          _lastFormShownAt = DateTime.now();
+          // Start a fresh cooldown: clear suspension credit accrued before
+          // this presentation along with the stopwatch mark.
           _lastFormShownElapsed = _clock.elapsed;
+          _suspendedCredit = Duration.zero;
         }
         // Re-check the status after the presentation (or after a recent
         // presentation). A form that was shown but left the status unresolved
@@ -174,25 +189,64 @@ class AdConsentService {
     return (allowed: await consent.canRequestAds(), formShown: false);
   }
 
-  /// Elapsed time since the consent form was last shown, on the clock that
-  /// reports more time. The wall clock counts time spent suspended/background
-  /// (a phone locked or backgrounded for an hour must let the cooldown
-  /// elapse; a Stopwatch alone would freeze during suspend and re-latch the
-  /// session); the monotonic stopwatch is immune to wall-clock jumps (a clock
-  /// set backwards must not extend the cooldown forever). Taking the larger of
-  /// the two, the session can never be silently re-latched by clock drift.
-  ///
-  /// Residual edge: an extreme forward clock jump could make the wall clock
-  /// look like the cooldown elapsed and re-offer the form to a still-undecided
-  /// user who dismissed it moments ago. That re-offer goes through the full
-  /// UMP flow first — if consent was actually given the status is obtained and
-  /// no form is shown — so a user who decided is never re-prompted, only
-  /// pure dismissal is at worst re-offered early.
-  Duration _elapsedSinceFormShown(DateTime shownAt, Duration? shownElapsed) {
-    final wall = DateTime.now().difference(shownAt);
-    final monotonic =
-        shownElapsed == null ? Duration.zero : _clock.elapsed - shownElapsed;
-    return wall > monotonic ? wall : monotonic;
+  /// Elapsed time since the consent form was last shown, computed as the
+  /// monotonic stopwatch time since that presentation plus the time the app
+  /// was demonstrably background-suspended in between. The monotonic base is
+  /// immune to wall-clock jumps in either direction: a forward jump cannot
+  /// make a just-dismissed form presentable again, and a backward jump cannot
+  /// extend the cooldown forever. The suspension credit (accrued only for
+  /// observed pause/resume cycles, see [didChangeAppLifecycleState]) makes a
+  /// phone locked or backgrounded for an hour count toward the cooldown, so
+  /// the session is not silently re-latched by a stopwatch that froze during
+  /// suspend.
+  Duration _elapsedSinceFormShown(Duration shownElapsed) {
+    return (_clock.elapsed - shownElapsed) + _suspendedCredit;
+  }
+
+  /// Accrues suspension time so the cooldown counts time spent with the device
+  /// asleep or the app backgrounded, where a [Stopwatch] does not advance.
+  /// When the app resumes, the wall clock's surplus over the frozen stopwatch
+  /// across the observed pause/resume cycle is that genuinely suspended time.
+  /// A wall-clock jump that is not accompanied by a real suspend contributes
+  /// nothing, so no clock manipulation can shorten the presentation cooldown.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final pausedElapsed = _pausedElapsed;
+      final pausedAt = _pausedAt;
+      if (pausedElapsed != null && pausedAt != null) {
+        final wallGap = DateTime.now().difference(pausedAt);
+        final monoGap = _clock.elapsed - pausedElapsed;
+        final suspension = wallGap - monoGap;
+        if (suspension > Duration.zero) {
+          _suspendedCredit += suspension;
+        }
+      }
+      _pausedElapsed = null;
+      _pausedAt = null;
+      return;
+    }
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _pausedElapsed = _clock.elapsed;
+      _pausedAt = DateTime.now();
+    }
+  }
+
+  void _ensureObserving() {
+    if (_observing) {
+      return;
+    }
+    _observing = true;
+    try {
+      WidgetsBinding.instance.addObserver(this);
+    } on Object catch (error) {
+      // No widget binding (e.g. headless analysis or a non-application
+      // entry): the cooldown then never accrues suspension credit, which is
+      // fail-safe — ads can only stay off, never on.
+      debugPrint('AdConsentService: no widget binding, ignoring: $error');
+    }
   }
 
   Future<void> _updateConsentInfo(ConsentInformation consent) {
