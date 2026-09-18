@@ -17,11 +17,16 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// would silence the flow for the whole session — an EEA user would be
 /// blocked even after granting consent later in the same session.
 ///
-/// The one thing remembered across a blocked outcome is that the consent form
-/// has already been presented once this session. A user who already saw the
-/// form and declined or dismissed it is never shown it again automatically,
-/// but the flow still re-runs on later calls to re-check the status so a
-/// decision recorded later is honored.
+/// Presenting the consent form is rate-limited, not session-latched. A user
+/// who just saw the form (whether they declined, dismissed it, or the SDK had
+/// not yet persisted their choice) is not bombarded with it: after a
+/// presentation the form is not shown again until the re-presentation delay
+/// elapses, so banner rebuilds and re-navigations during the same call or
+/// shortly after do not re-prompt. But a form that was dismissed without a
+/// recorded decision must not seal the user's fate for the whole session:
+/// once the delay elapses the form is offered again, so a user whose status
+/// is still unresolved can still make a choice instead of being silently
+/// blocked with the flow never able to reach a decision.
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
@@ -43,11 +48,12 @@ class AdConsentService {
   static const Duration _plumbingTimeout = Duration(seconds: 20);
   static const Duration _retryDelay = Duration(seconds: 4);
   static const int _maxAttempts = 2;
+  static const Duration _minDelayBetweenPresentations = Duration(minutes: 10);
 
   Completer<bool>? _inFlight;
   bool _finished = false;
   bool _result = false;
-  bool _formShownThisSession = false;
+  DateTime? _lastFormShownAt;
 
   /// Returns whether ads may be requested. Never throws.
   Future<bool> ensureConsent() async {
@@ -72,8 +78,8 @@ class AdConsentService {
           allowed = outcome.allowed;
           formShown = outcome.formShown;
           if (allowed || formShown) {
-            // Definitive for this call: consent granted, or the user already
-            // saw the form this session and needs no re-presentation.
+            // Definitive for this call: consent granted, or the form was
+            // already presented recently and this call must not re-present.
             break;
           }
         } catch (error, stackTrace) {
@@ -116,7 +122,11 @@ class AdConsentService {
     final status = await consent.getConsentStatus();
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
-        if (!_formShownThisSession) {
+        final lastShown = _lastFormShownAt;
+        final canPresent = lastShown == null ||
+            DateTime.now().difference(lastShown) >=
+                _minDelayBetweenPresentations;
+        if (canPresent) {
           final form = await _loadForm().timeout(_plumbingTimeout);
           final presented = await _showForm(form);
           if (!presented) {
@@ -126,14 +136,15 @@ class AdConsentService {
             // offered.
             return (allowed: false, formShown: false);
           }
-          _formShownThisSession = true;
+          _lastFormShownAt = DateTime.now();
         }
-        // The form has been presented this call or earlier in this session.
-        // Never present it again automatically; re-check the status so a
-        // decision recorded later is honored. A form that was shown but left
-        // the status unresolved is a non-decision: it is reported as shown
-        // (so this call stops), but the blocked result is not cached so the
-        // flow re-runs and can grant ads if consent is recorded later.
+        // Re-check the status after the presentation (or after a recent
+        // presentation). A form that was shown but left the status unresolved
+        // is a non-decision: it is reported as shown (so this call stops and
+        // does not re-present), the blocked result is not cached, and the
+        // presentation delay only temporarily suppresses re-offering — the
+        // flow re-runs on later calls and a decision recorded later is
+        // honored.
         final after = await consent.getConsentStatus();
         if (after == ConsentStatus.required || after == ConsentStatus.unknown) {
           return (allowed: false, formShown: true);
