@@ -8,14 +8,20 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 ///
 /// Ads are served only when the UMP flow reaches a definitive "can request
 /// ads" outcome: consent obtained, or consent not required. Everything else
-/// fails closed (ads stay off). The outcome is cached once it is decisive:
-/// an EEA user who has actually been shown the consent form has made a
-/// decision in either direction, and that decision is honored for the whole
-/// session — a user who declined or dismissed the form is never shown it
-/// again on a later call. Only requests that never reached a decision (the
-/// flow could not run, the form was not available/presented, status was
-/// unresolved) are NOT cached, so the flow re-runs on the next request and a
-/// consent decision made later in the session is honored.
+/// fails closed (ads stay off).
+///
+/// Only a definitive ALLOW is cached for the session. A blocked outcome is
+/// never cached, so the flow re-runs on the next request and a consent
+/// decision recorded later (the SDK persisting an earlier choice, or a later
+/// visit to the privacy options form) is honored. Caching a blocked outcome
+/// would silence the flow for the whole session — an EEA user would be
+/// blocked even after granting consent later in the same session.
+///
+/// The one thing remembered across a blocked outcome is that the consent form
+/// has already been presented once this session. A user who already saw the
+/// form and declined or dismissed it is never shown it again automatically,
+/// but the flow still re-runs on later calls to re-check the status so a
+/// decision recorded later is honored.
 ///
 /// Inside a single call the flow is retried a bounded number of times with a
 /// short delay so a first-launch EEA user whose consent form only becomes
@@ -41,6 +47,7 @@ class AdConsentService {
   Completer<bool>? _inFlight;
   bool _finished = false;
   bool _result = false;
+  bool _formShownThisSession = false;
 
   /// Returns whether ads may be requested. Never throws.
   Future<bool> ensureConsent() async {
@@ -65,9 +72,8 @@ class AdConsentService {
           allowed = outcome.allowed;
           formShown = outcome.formShown;
           if (allowed || formShown) {
-            // Definitive: consent granted, or the user actually saw the form
-            // and the outcome is decided. Do not present the form again, and
-            // do not re-run the flow later in this session.
+            // Definitive for this call: consent granted, or the user already
+            // saw the form this session and needs no re-presentation.
             break;
           }
         } catch (error, stackTrace) {
@@ -76,13 +82,13 @@ class AdConsentService {
               '$error\n$stackTrace');
         }
       }
-      if (allowed || formShown) {
-        // A definitive outcome, in either direction, is cached for the
-        // session: a user who has seen the form and declined is never shown
-        // it again on a later call. Only transient blocks (the form was never
-        // presented) stay uncached so the flow can re-run until decisive.
+      if (allowed) {
+        // Only a definitive ALLOW is cached. A blocked outcome — even one
+        // where the form was shown — is never cached, so the flow re-runs on
+        // the next request and a consent decision recorded later in the
+        // session is honored instead of a stale session-long denial.
         _finished = true;
-        _result = allowed;
+        _result = true;
       }
       completer.complete(allowed);
     } catch (error, stackTrace) {
@@ -110,14 +116,24 @@ class AdConsentService {
     final status = await consent.getConsentStatus();
     if (status == ConsentStatus.required) {
       if (await consent.isConsentFormAvailable()) {
-        final form = await _loadForm().timeout(_plumbingTimeout);
-        final presented = await _showForm(form);
-        if (!presented) {
-          // The form failed to present for the user (e.g. the current
-          // activity was not ready). It never reached the user, so this is a
-          // transient failure: retry shortly so the form is still offered.
-          return (allowed: false, formShown: false);
+        if (!_formShownThisSession) {
+          final form = await _loadForm().timeout(_plumbingTimeout);
+          final presented = await _showForm(form);
+          if (!presented) {
+            // The form failed to present for the user (e.g. the current
+            // activity was not ready). It never reached the user, so this is
+            // a transient failure: retry shortly so the form is still
+            // offered.
+            return (allowed: false, formShown: false);
+          }
+          _formShownThisSession = true;
         }
+        // The form has been presented this call or earlier in this session.
+        // Never present it again automatically; re-check the status so a
+        // decision recorded later is honored. A form that was shown but left
+        // the status unresolved is a non-decision: it is reported as shown
+        // (so this call stops), but the blocked result is not cached so the
+        // flow re-runs and can grant ads if consent is recorded later.
         final after = await consent.getConsentStatus();
         if (after == ConsentStatus.required || after == ConsentStatus.unknown) {
           return (allowed: false, formShown: true);
