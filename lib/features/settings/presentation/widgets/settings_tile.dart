@@ -91,6 +91,9 @@ class SettingsSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCupertino =
+        Theme.of(context).platform == TargetPlatform.iOS ||
+            Theme.of(context).platform == TargetPlatform.macOS;
     return SettingsTile(
       icon: icon,
       title: title,
@@ -101,7 +104,10 @@ class SettingsSwitchTile extends StatelessWidget {
         child: Switch.adaptive(
           value: value,
           onChanged: onChanged,
-          activeColor: AppColors.primary,
+          // activeColor (deprecated) mapped to the thumb color on Android-like
+          // platforms and to the track color on iOS/macOS; replicate both.
+          activeThumbColor: isCupertino ? null : AppColors.primary,
+          activeTrackColor: isCupertino ? AppColors.primary : null,
         ),
       ),
     );

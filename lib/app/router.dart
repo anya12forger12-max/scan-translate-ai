@@ -98,6 +98,7 @@ class AppRouter {
 
 class _CustomPageRoute extends PageRouteBuilder {
   final Widget page;
+  @override
   final RouteSettings settings;
 
   _CustomPageRoute({required this.page, required this.settings})

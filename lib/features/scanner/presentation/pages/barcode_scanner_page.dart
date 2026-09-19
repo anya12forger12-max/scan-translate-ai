@@ -5,7 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
-import '../../../../core/widgets/error_display.dart';
 import '../../../../app/di/providers.dart';
 import '../providers/scanner_provider.dart';
 import '../widgets/scanner_overlay.dart';

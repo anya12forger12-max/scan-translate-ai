@@ -87,7 +87,6 @@ class _ScannerOverlayPainter extends CustomPainter {
 
     for (final corner in corners) {
       final isLeft = corner.dx == scanWindow.left;
-      final isRight = corner.dx == scanWindow.right;
       final isTop = corner.dy == scanWindow.top;
       final isBottom = corner.dy == scanWindow.bottom;
 
@@ -99,7 +98,7 @@ class _ScannerOverlayPainter extends CustomPainter {
         );
         canvas.drawLine(
           corner,
-          corner + Offset(0, cornerLength),
+          corner + const Offset(0, cornerLength),
           cornerPaint,
         );
       }
@@ -111,7 +110,7 @@ class _ScannerOverlayPainter extends CustomPainter {
         );
         canvas.drawLine(
           corner,
-          corner + Offset(0, -cornerLength),
+          corner + const Offset(0, -cornerLength),
           cornerPaint,
         );
       }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -22,7 +21,7 @@ class LoadingDisplay extends StatelessWidget {
           SizedBox(
             width: size,
             height: size,
-            child: CircularProgressIndicator(
+            child: const CircularProgressIndicator(
               strokeWidth: 3,
               valueColor:
                   AlwaysStoppedAnimation<Color>(AppColors.primary),

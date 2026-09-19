@@ -6,7 +6,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_display.dart';
-import '../../../../core/widgets/loading_display.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../app/di/providers.dart';
 import '../../domain/entities/history_item.dart';
@@ -127,8 +126,8 @@ class HistoryPage extends ConsumerWidget {
       return ListView.builder(
         padding: const EdgeInsets.only(top: 8),
         itemCount: 6,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        itemBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: SkeletonLoader(height: 80, borderRadius: 16),
         ),
       );

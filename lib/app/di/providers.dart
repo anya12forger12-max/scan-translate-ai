@@ -14,16 +14,12 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/history/data/datasources/history_datasource.dart';
 import '../../features/history/data/repositories/history_repository_impl.dart';
-import '../../features/history/presentation/providers/history_provider.dart';
 import '../../features/ocr/data/datasources/ocr_datasource.dart';
 import '../../features/ocr/data/repositories/ocr_repository_impl.dart';
-import '../../features/ocr/presentation/providers/ocr_provider.dart';
 import '../../features/scanner/data/datasources/scanner_datasource.dart';
 import '../../features/scanner/data/repositories/scanner_repository_impl.dart';
-import '../../features/scanner/presentation/providers/scanner_provider.dart';
 import '../../features/translation/data/datasources/translation_datasource.dart';
 import '../../features/translation/data/repositories/translation_repository_impl.dart';
-import '../../features/translation/presentation/providers/translation_provider.dart';
 
 // Core Services
 final connectivityProvider = Provider<Connectivity>((ref) => Connectivity());

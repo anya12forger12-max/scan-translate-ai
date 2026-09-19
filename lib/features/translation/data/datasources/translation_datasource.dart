@@ -103,9 +103,11 @@ class TranslationRemoteDataSource {
           resultCompleter.complete(result.recognizedWords.trim());
           requestStop();
         },
-        localeId: language,
-        listenFor: const Duration(seconds: 15),
-        partialResults: false,
+        listenOptions: stt.SpeechListenOptions(
+          localeId: language,
+          listenFor: const Duration(seconds: 15),
+          partialResults: false,
+        ),
       );
 
       if (cancelCompleter.isCompleted) {

@@ -24,7 +24,6 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
     with SingleTickerProviderStateMixin {
   MobileScannerController? _scannerController;
   bool _hasPermission = false;
-  bool _cameraInitialized = false;
 
   @override
   void initState() {
@@ -65,6 +64,7 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
   void _handleOpenUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
+      if (!mounted) return;
       final shouldOpen = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -101,7 +101,6 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
               scannerNotifier.resetScanner();
-              setState(() => _cameraInitialized = false);
             },
           ),
         ),
@@ -141,7 +140,6 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
                 },
                 onDismiss: () {
                   scannerNotifier.resetScanner();
-                  setState(() => _cameraInitialized = false);
                 },
               ),
             ),

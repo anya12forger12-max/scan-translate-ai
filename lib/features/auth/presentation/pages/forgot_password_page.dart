@@ -55,7 +55,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       appBar: AppBar(
         title: Semantics(
           label: 'Reset Password page',
-          child: Text('Reset Password'),
+          child: const Text('Reset Password'),
         ),
       ),
       body: SafeArea(
@@ -69,7 +69,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 children: [
                   Semantics(
                     label: 'Reset password icon',
-                    child: Icon(
+                    child: const Icon(
                       Icons.lock_reset_rounded,
                       size: 80,
                       color: AppColors.primary,

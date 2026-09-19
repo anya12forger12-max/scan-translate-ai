@@ -108,7 +108,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
 
           const SizedBox(height: 8),
-          _SectionHeader(title: 'Appearance'),
+          const _SectionHeader(title: 'Appearance'),
           SettingsTile(
             icon: Icons.palette_outlined,
             title: 'Theme',
@@ -126,7 +126,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
 
           const SizedBox(height: 16),
-          _SectionHeader(title: 'Scanning'),
+          const _SectionHeader(title: 'Scanning'),
           SettingsSwitchTile(
             icon: Icons.save_outlined,
             title: 'Auto-save Scans',
@@ -137,7 +137,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
 
           const SizedBox(height: 16),
-          _SectionHeader(title: 'Account'),
+          const _SectionHeader(title: 'Account'),
           SettingsTile(
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
@@ -212,42 +212,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ),
       builder: (context) => Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Choose Theme', style: AppTypography.headlineSmall),
-            const SizedBox(height: 16),
-            RadioListTile<AppThemeMode>(
-              title: const Text('Light'),
-              secondary: const Icon(Icons.light_mode),
-              value: AppThemeMode.light,
-              groupValue: current,
-              onChanged: (value) {
-                ref.read(settingsProvider.notifier).setThemeMode(AppThemeMode.light);
-                Navigator.pop(context);
-              },
-            ),
-            RadioListTile<AppThemeMode>(
-              title: const Text('Dark'),
-              secondary: const Icon(Icons.dark_mode),
-              value: AppThemeMode.dark,
-              groupValue: current,
-              onChanged: (value) {
-                ref.read(settingsProvider.notifier).setThemeMode(AppThemeMode.dark);
-                Navigator.pop(context);
-              },
-            ),
-            RadioListTile<AppThemeMode>(
-              title: const Text('Follow System'),
-              secondary: const Icon(Icons.settings_brightness),
-              value: AppThemeMode.system,
-              groupValue: current,
-              onChanged: (value) {
-                ref.read(settingsProvider.notifier).setThemeMode(AppThemeMode.system);
-                Navigator.pop(context);
-              },
-            ),
-          ],
+        child: RadioGroup<AppThemeMode>(
+          groupValue: current,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setThemeMode(value);
+              Navigator.pop(context);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Choose Theme', style: AppTypography.headlineSmall),
+              const SizedBox(height: 16),
+              const RadioListTile<AppThemeMode>(
+                title: Text('Light'),
+                secondary: Icon(Icons.light_mode),
+                value: AppThemeMode.light,
+              ),
+              const RadioListTile<AppThemeMode>(
+                title: Text('Dark'),
+                secondary: Icon(Icons.dark_mode),
+                value: AppThemeMode.dark,
+              ),
+              const RadioListTile<AppThemeMode>(
+                title: Text('Follow System'),
+                secondary: Icon(Icons.settings_brightness),
+                value: AppThemeMode.system,
+              ),
+            ],
+          ),
         ),
       ),
     );

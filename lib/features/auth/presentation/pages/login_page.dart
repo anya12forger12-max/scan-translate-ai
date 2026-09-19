@@ -4,8 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
-import '../../../../core/widgets/loading_display.dart';
-import '../../../privacy_policy/presentation/pages/privacy_policy_page.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_form_field.dart';
 
@@ -20,7 +18,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -63,7 +60,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 children: [
                   Semantics(
                     label: 'Scan & Translate AI logo',
-                    child: Icon(
+                    child: const Icon(
                       Icons.translate_rounded,
                       size: 80,
                       color: AppColors.primary,

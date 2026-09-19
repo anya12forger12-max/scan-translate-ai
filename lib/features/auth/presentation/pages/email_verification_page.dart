@@ -22,7 +22,7 @@ class EmailVerificationPage extends ConsumerWidget {
               children: [
                 Semantics(
                   label: 'Email verification icon',
-                  child: Icon(
+                  child: const Icon(
                     Icons.mark_email_unread_rounded,
                     size: 80,
                     color: AppColors.warning,

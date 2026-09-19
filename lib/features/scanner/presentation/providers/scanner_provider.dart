@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/errors/failures.dart';
 import '../../domain/entities/barcode_format.dart';
 import '../../domain/entities/scan_result.dart';
 

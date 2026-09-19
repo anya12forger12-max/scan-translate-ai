@@ -51,7 +51,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       appBar: AppBar(
         title: Semantics(
           label: 'Create Account page',
-          child: Text('Create Account'),
+          child: const Text('Create Account'),
         ),
       ),
       body: SafeArea(

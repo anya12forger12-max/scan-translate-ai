@@ -17,7 +17,6 @@ class CameraTranslationPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transState = ref.watch(translationProvider);
-    final ocrState = ref.watch(ocrProvider);
     final transNotifier = ref.read(translationProvider.notifier);
 
     return Scaffold(

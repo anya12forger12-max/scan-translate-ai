@@ -36,7 +36,7 @@ class HistoryFilter extends StatelessWidget {
               selected: isSelected,
               child: FilterChip(
                 label: Text(
-                  entry.value!,
+                  entry.value,
                   style: AppTypography.labelMedium.copyWith(
                     color: isSelected ? Colors.white : AppColors.textSecondary,
                   ),
