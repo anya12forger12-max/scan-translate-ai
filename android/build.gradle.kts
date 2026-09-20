@@ -1,3 +1,7 @@
+plugins {
+    id("org.owasp.dependencycheck") version "12.2.2"
+}
+
 buildscript {
     repositories {
         google()
@@ -43,4 +47,10 @@ subprojects {
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
+}
+
+dependencyCheck {
+    nvd {
+        maxRetryCount.set(10)
+    }
 }

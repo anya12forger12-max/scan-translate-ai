@@ -88,4 +88,5 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
