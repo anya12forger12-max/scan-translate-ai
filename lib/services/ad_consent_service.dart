@@ -27,7 +27,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// recorded decision must not seal the user's fate for the whole session:
 /// once the delay elapses the form is offered again, so a user whose status
 /// is still unresolved can still make a choice instead of being silently
-/// /// blocked with the flow never able to reach a decision.
+/// blocked with the flow never able to reach a decision.
 ///
 /// The cooldown is measured on two clocks reconciled into one. A monotonic
 /// stopwatch supplies the base elapsed time, which is immune to wall-clock
