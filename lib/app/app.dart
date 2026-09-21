@@ -73,7 +73,11 @@ class _AuthenticatedGate extends ConsumerWidget {
         final accepted = snapshot.data ?? false;
 
         if (!accepted) {
-          ref.read(privacyPolicyProvider.notifier).setMustAccept(true);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              ref.read(privacyPolicyProvider.notifier).setMustAccept(true);
+            }
+          });
           return const PrivacyPolicyPage(isMandatory: true);
         }
 

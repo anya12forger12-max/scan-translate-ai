@@ -10,6 +10,7 @@ import '../providers/scanner_provider.dart';
 import '../widgets/scanner_overlay.dart';
 import '../widgets/scan_result_card.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../../../core/widgets/permission_rationale_dialog.dart';
 
 class BarcodeScannerPage extends ConsumerStatefulWidget {
   const BarcodeScannerPage({super.key});
@@ -39,6 +40,18 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
   }
 
   Future<void> _checkPermission() async {
+    if (!await Permission.camera.isGranted && mounted) {
+      final proceed = await showPermissionRationale(
+        context,
+        title: 'Camera access',
+        message: 'The scanner uses your camera to detect and read QR codes and '
+            'barcodes. Nothing is recorded or uploaded just by scanning.',
+      );
+      if (!proceed) {
+        if (mounted) setState(() => _hasPermission = false);
+        return;
+      }
+    }
     final status = await Permission.camera.request();
     if (mounted) {
       setState(() => _hasPermission = status.isGranted);

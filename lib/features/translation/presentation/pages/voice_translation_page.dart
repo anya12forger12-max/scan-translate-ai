@@ -9,6 +9,7 @@ import '../../../../core/utils/haptic_utils.dart';
 import '../../../../core/utils/permission_utils.dart';
 import '../../../../core/widgets/error_display.dart';
 import '../../../../core/widgets/loading_display.dart';
+import '../../../../core/widgets/permission_rationale_dialog.dart';
 import '../providers/translation_provider.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/voice_input_widget.dart';
@@ -27,6 +28,24 @@ class _VoiceTranslationPageState extends ConsumerState<VoiceTranslationPage> {
   String _recognizedText = '';
 
   Future<void> _startListening() async {
+    final micGranted = await PermissionUtils.hasMicrophonePermission();
+    if (!micGranted && mounted) {
+      final proceed = await showPermissionRationale(
+        context,
+        title: 'Microphone access',
+        message: 'Voice translation uses the microphone to capture your speech '
+            'and turn it into text for translation.',
+      );
+      if (!proceed) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Microphone permission required')),
+          );
+        }
+        return;
+      }
+    }
+
     final hasPermission = await PermissionUtils.requestMicrophonePermission();
     if (!hasPermission) {
       if (mounted) {

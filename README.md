@@ -77,6 +77,17 @@ Latest signed prebuilt release (APK + AAB): see the [Releases](https://github.co
 
 > **Note:** Firebase integration (Auth, Firestore, ML Kit) requires your own `google-services.json` for custom builds; the prebuilt release APK already includes it.
 
+## Supported Android Versions
+
+- Android 7.0 (API 24) and later.
+- Built and tested on Android 14 (API 34) / Android 15 (API 36).
+
+## Known Limitations
+
+- On-device translation models are downloaded and cached on the device; downloading them (and cloud features) requires a network connection.
+- Camera and microphone access are required for the scan and voice features; the app stays usable when these are denied, and the affected features indicate the denied permission.
+- Translation quality depends on the on-device model and the source image/audio quality.
+
 ## Technology Stack
 
 - **Flutter / Dart** with **Riverpod** (state) and GoRouter (navigation)
