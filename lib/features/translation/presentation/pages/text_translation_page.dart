@@ -35,6 +35,7 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
 
   @override
   void dispose() {
+    ref.read(translationProvider.notifier).clearError();
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -51,16 +52,20 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
         .translateText(
           text: _textController.text.trim(),
           targetLanguage: state.targetLanguage,
-          sourceLanguage: state.sourceLanguage == 'auto' ? null : state.sourceLanguage,
+          sourceLanguage: state.sourceLanguage == 'auto'
+              ? null
+              : state.sourceLanguage,
         )
         .then((result) {
-      result.fold(
-        (failure) =>
-            ref.read(translationProvider.notifier).setError(failure.message),
-        (result) =>
-            ref.read(translationProvider.notifier).setResult(result),
-      );
-    });
+          if (!mounted) return;
+          result.fold(
+            (failure) => ref
+                .read(translationProvider.notifier)
+                .setError(failure.message),
+            (result) =>
+                ref.read(translationProvider.notifier).setResult(result),
+          );
+        });
   }
 
   @override
@@ -69,9 +74,7 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
     final transNotifier = ref.read(translationProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Text Translation'),
-      ),
+      appBar: AppBar(title: const Text('Text Translation')),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -84,15 +87,19 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
                   Expanded(
                     child: LanguageSelector(
                       selectedCode: transState.sourceLanguage,
-                      onChanged: (lang) => transNotifier.setSourceLanguage(lang),
+                      onChanged: (lang) =>
+                          transNotifier.setSourceLanguage(lang),
                       label: 'Source language',
                     ),
                   ),
-                  LanguageSwapButton(onTap: () => transNotifier.swapLanguages()),
+                  LanguageSwapButton(
+                    onTap: () => transNotifier.swapLanguages(),
+                  ),
                   Expanded(
                     child: LanguageSelector(
                       selectedCode: transState.targetLanguage,
-                      onChanged: (lang) => transNotifier.setTargetLanguage(lang),
+                      onChanged: (lang) =>
+                          transNotifier.setTargetLanguage(lang),
                       label: 'Target language',
                     ),
                   ),

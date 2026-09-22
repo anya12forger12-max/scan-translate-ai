@@ -3,16 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/haptic_utils.dart';
+import '../../../../core/utils/permission_utils.dart';
 import '../../../../core/widgets/error_display.dart';
+import '../../../../core/widgets/permission_rationale_dialog.dart';
 import '../../../../app/di/providers.dart';
 import '../providers/scanner_provider.dart';
-import '../widgets/scanner_overlay.dart';
 import '../widgets/scan_result_card.dart';
-import 'package:permission_handler/permission_handler.dart';
-import '../../../../core/widgets/permission_rationale_dialog.dart';
+import '../widgets/scanner_error_view.dart';
+import '../widgets/scanner_overlay.dart';
 
 class QrScannerPage extends ConsumerStatefulWidget {
   const QrScannerPage({super.key});
@@ -22,24 +24,43 @@ class QrScannerPage extends ConsumerStatefulWidget {
 }
 
 class _QrScannerPageState extends ConsumerState<QrScannerPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   MobileScannerController? _scannerController;
   bool _hasPermission = false;
 
   @override
   void initState() {
     super.initState();
-    _checkPermission();
+    WidgetsBinding.instance.addObserver(this);
     _scannerController = MobileScannerController(
       torchEnabled: false,
       detectionSpeed: DetectionSpeed.normal,
     );
+    _checkPermission();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scannerController?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshPermissionOnResume();
+    }
+  }
+
+  /// Re-checks the camera permission when the activity is resumed. The
+  /// permission may have been revoked (or granted) from the system settings
+  /// while the scanner was backgrounded, and the widget must reflect the new
+  /// state instead of keeping a stale permission flag.
+  Future<void> _refreshPermissionOnResume() async {
+    final granted = await Permission.camera.isGranted;
+    if (!mounted) return;
+    setState(() => _hasPermission = granted);
   }
 
   Future<void> _checkPermission() async {
@@ -56,8 +77,53 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
       }
     }
     final status = await Permission.camera.request();
+    final granted = status.isGranted;
     if (mounted) {
-      setState(() => _hasPermission = status.isGranted);
+      setState(() => _hasPermission = granted);
+    }
+    if (!granted && mounted && status.isPermanentlyDenied) {
+      await _offerOpenSettings();
+    }
+  }
+
+  /// When the permission is permanently denied the system prompt can no
+  /// longer be shown, so the only recovery path is the app settings screen.
+  Future<void> _offerOpenSettings() async {
+    final openSettings = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Camera permission is off'),
+        content: const Text(
+            'The scanner needs camera access. You can allow it in the '
+            'system settings for this app.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    if (openSettings == true) {
+      await PermissionUtils.openAppSettings();
+      final granted = await Permission.camera.isGranted;
+      if (mounted) {
+        setState(() => _hasPermission = granted);
+      }
+    }
+  }
+
+  Future<void> _retryScanner() async {
+    await _checkPermission();
+    if (!mounted || !_hasPermission) return;
+    try {
+      await _scannerController?.start();
+    } on Object catch (error) {
+      debugPrint('QrScanner: restart failed: $error');
     }
   }
 
@@ -195,6 +261,10 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage>
                 MobileScanner(
                   controller: _scannerController,
                   onDetect: _handleDetect,
+                  errorBuilder: (context, error, child) => ScannerErrorView(
+                    error: error,
+                    onRetry: _retryScanner,
+                  ),
                 ),
                 const ScannerOverlay(
                   label: 'Align QR code within frame',

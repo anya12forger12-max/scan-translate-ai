@@ -72,7 +72,14 @@ class TranslationNotifier extends StateNotifier<TranslationState> {
   }
 
   void setError(String message) {
-    state = state.copyWith(status: TranslationStatus.error, errorMessage: message);
+    state = state.copyWith(
+      status: TranslationStatus.error,
+      errorMessage: message,
+    );
+  }
+
+  void clearError() {
+    state = state.copyWith(status: TranslationStatus.initial, clearError: true);
   }
 
   void reset() {
@@ -82,5 +89,5 @@ class TranslationNotifier extends StateNotifier<TranslationState> {
 
 final translationProvider =
     StateNotifierProvider<TranslationNotifier, TranslationState>((ref) {
-  return TranslationNotifier();
-});
+      return TranslationNotifier();
+    });

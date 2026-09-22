@@ -18,12 +18,37 @@ class PrivacyPolicyPage extends ConsumerStatefulWidget {
 
 class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
   bool _isChecked = false;
+  bool _isAccepting = false;
+
+  Future<void> _acceptAndContinue() async {
+    if (_isAccepting) return;
+    final authNotifier = ref.read(authProvider.notifier);
+    final privacyNotifier = ref.read(privacyPolicyProvider.notifier);
+    final version = ref.read(privacyPolicyProvider).currentVersion;
+
+    setState(() => _isAccepting = true);
+    final accepted = await authNotifier.acceptPrivacyPolicy(version);
+    if (!mounted) return;
+    setState(() => _isAccepting = false);
+
+    if (!accepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Could not save your acceptance. Please check your connection '
+              'and try again.'),
+        ),
+      );
+      return;
+    }
+
+    HapticUtils.mediumImpact();
+    privacyNotifier.accept(version);
+    Navigator.of(context).pushReplacementNamed('/home');
+  }
 
   @override
   Widget build(BuildContext context) {
-    final privacyState = ref.watch(privacyPolicyProvider);
-    final authNotifier = ref.read(authProvider.notifier);
-
     return PopScope(
       canPop: !widget.isMandatory,
       child: Scaffold(
@@ -180,19 +205,14 @@ class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: _isChecked
-                              ? () {
-                                  HapticUtils.mediumImpact();
-                                  authNotifier.acceptPrivacyPolicy(
-                                    privacyState.currentVersion,
-                                  );
-                                  ref
-                                      .read(privacyPolicyProvider.notifier)
-                                      .accept(privacyState.currentVersion);
-                                  Navigator.of(context).pushReplacementNamed('/home');
-                                }
+                          onPressed: _isChecked && !_isAccepting
+                              ? _acceptAndContinue
                               : null,
-                          child: const Text('Accept & Continue'),
+                          child: Text(
+                            _isAccepting
+                                ? 'Saving...'
+                                : 'Accept & Continue',
+                          ),
                         ),
                       ),
                     ],

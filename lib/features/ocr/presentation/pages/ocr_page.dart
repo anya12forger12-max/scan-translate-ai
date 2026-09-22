@@ -33,6 +33,7 @@ class OcrPage extends ConsumerWidget {
                   HapticUtils.mediumImpact();
                   ocrNotifier.setLoading();
                   final result = await ocrRepo.recognizeTextFromCamera();
+                  if (!context.mounted) return;
                   result.fold(
                     (failure) => ocrNotifier.setError(failure.message),
                     (result) => ocrNotifier.setResult(result),
@@ -42,6 +43,7 @@ class OcrPage extends ConsumerWidget {
                   HapticUtils.mediumImpact();
                   ocrNotifier.setLoading();
                   final result = await ocrRepo.recognizeTextFromGallery();
+                  if (!context.mounted) return;
                   result.fold(
                     (failure) => ocrNotifier.setError(failure.message),
                     (result) => ocrNotifier.setResult(result),

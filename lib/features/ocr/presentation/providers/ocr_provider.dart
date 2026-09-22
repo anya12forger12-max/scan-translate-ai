@@ -33,7 +33,11 @@ class OcrNotifier extends StateNotifier<OcrState> {
   OcrNotifier() : super(const OcrState());
 
   void setLoading() {
-    state = state.copyWith(status: OcrStatus.loading, clearError: true, clearResult: true);
+    state = state.copyWith(
+      status: OcrStatus.loading,
+      clearError: true,
+      clearResult: true,
+    );
   }
 
   void setResult(OcrResult result) {
@@ -42,6 +46,10 @@ class OcrNotifier extends StateNotifier<OcrState> {
 
   void setError(String message) {
     state = state.copyWith(status: OcrStatus.error, errorMessage: message);
+  }
+
+  void clearError() {
+    state = state.copyWith(status: OcrStatus.initial, clearError: true);
   }
 
   void reset() {

@@ -31,6 +31,10 @@ class PermissionUtils {
     return await ph.Permission.microphone.isGranted;
   }
 
+  static Future<ph.PermissionStatus> microphoneStatus() async {
+    return await ph.Permission.microphone.status;
+  }
+
   static Future<bool> hasGalleryPermission() async {
     return await ph.Permission.photos.isGranted;
   }

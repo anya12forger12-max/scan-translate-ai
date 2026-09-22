@@ -180,13 +180,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return _authRepository.isPrivacyPolicyAccepted();
   }
 
-  Future<void> acceptPrivacyPolicy(String version) async {
+  /// Persists the privacy-policy acceptance remotely. Returns true only when
+  /// the acceptance was actually recorded (so a failure such as an offline
+  /// connection does not bounce the user into the app while the backend still
+  /// expects acceptance on the next launch).
+  Future<bool> acceptPrivacyPolicy(String version) async {
     final result = await _authRepository.acceptPrivacyPolicy(version);
+    var accepted = false;
     result.fold(
       (failure) {
         state = state.copyWith(errorMessage: failure.message);
       },
       (_) {
+        accepted = true;
         if (state.user != null) {
           state = state.copyWith(
             user: AppUser(
@@ -203,6 +209,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         }
       },
     );
+    return accepted;
   }
 
   void clearError() {
