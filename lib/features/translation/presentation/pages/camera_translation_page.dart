@@ -34,11 +34,9 @@ class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
     Future<Either<Failure, OcrResult>> Function() capture,
   ) async {
     final transNotifier = ref.read(translationProvider.notifier);
-    final ocrNotifier = ref.read(ocrProvider.notifier);
     final targetLanguage = ref.read(translationProvider).targetLanguage;
 
     HapticUtils.mediumImpact();
-    ocrNotifier.setLoading();
     transNotifier.setLoading();
 
     final ocrResult = await capture();
@@ -49,11 +47,9 @@ class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
 
     ocrResult.fold(
       (failure) {
-        ocrNotifier.setError(failure.message);
         transNotifier.setError(failure.message);
       },
       (result) async {
-        ocrNotifier.setResult(result);
         final transRepo = ref.read(translationRepositoryProvider);
         final outcome = await transRepo.translateText(
           text: result.text,
