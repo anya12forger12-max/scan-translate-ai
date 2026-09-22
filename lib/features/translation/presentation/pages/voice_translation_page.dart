@@ -15,6 +15,7 @@ import '../providers/translation_provider.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/voice_input_widget.dart';
 import '../widgets/translation_card.dart';
+import '../../data/datasources/translation_datasource.dart';
 
 class VoiceTranslationPage extends ConsumerStatefulWidget {
   const VoiceTranslationPage({super.key});
@@ -27,6 +28,23 @@ class VoiceTranslationPage extends ConsumerStatefulWidget {
 class _VoiceTranslationPageState extends ConsumerState<VoiceTranslationPage> {
   bool _isListening = false;
   String _recognizedText = '';
+  late final TranslationRemoteDataSource _speechDatasource;
+
+  @override
+  void initState() {
+    super.initState();
+    // Snapshot the datasource so dispose can cancel an in-flight recognition
+    // session without touching the gone element's ref (illegal post-dispose).
+    _speechDatasource = ref.read(translationRemoteDataSourceProvider);
+    // A fresh visit must never surface an error left over from a previous
+    // screen; each page only ever displays state that it produced itself.
+    // Riverpod forbids mutating providers during initState/dispose, so the
+    // stale state is dropped in the frame that follows the first build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(translationProvider.notifier).clearError();
+    });
+  }
 
   Future<void> _startListening() async {
     final micGranted = await PermissionUtils.hasMicrophonePermission();
@@ -132,9 +150,7 @@ class _VoiceTranslationPageState extends ConsumerState<VoiceTranslationPage> {
     // Release the microphone immediately if the user backs out while
     // listening; otherwise the recognizer would keep recording for up to its
     // full listenFor window in the background.
-    final datasource = ref.read(translationRemoteDataSourceProvider);
-    unawaited(datasource.cancelCurrentSpeechRecognition());
-    ref.read(translationProvider.notifier).clearError();
+    unawaited(_speechDatasource.cancelCurrentSpeechRecognition());
     super.dispose();
   }
 

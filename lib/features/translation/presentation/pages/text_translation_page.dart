@@ -27,6 +27,14 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
   @override
   void initState() {
     super.initState();
+    // A fresh visit must never surface an error left over from a previous
+    // screen; each page only ever displays state that it produced itself.
+    // Riverpod forbids mutating providers during initState/dispose, so the
+    // stale state is dropped in the frame that follows the first build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(translationProvider.notifier).clearError();
+    });
     if (widget.initialText != null) {
       _textController.text = widget.initialText!;
       _translate();
@@ -35,7 +43,6 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
 
   @override
   void dispose() {
-    ref.read(translationProvider.notifier).clearError();
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();

@@ -24,9 +24,21 @@ class CameraTranslationPage extends ConsumerStatefulWidget {
 
 class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
   @override
+  void initState() {
+    super.initState();
+    // A fresh visit must never surface an error left over from a previous
+    // screen; each page only ever displays state that it produced itself.
+    // Riverpod forbids mutating providers during initState/dispose, so the
+    // stale state is dropped in the frame that follows the first build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(translationProvider.notifier).clearError();
+      ref.read(ocrProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
-    ref.read(translationProvider.notifier).clearError();
-    ref.read(ocrProvider.notifier).clearError();
     super.dispose();
   }
 
@@ -47,7 +59,11 @@ class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
 
     ocrResult.fold(
       (failure) {
-        transNotifier.setError(failure.message);
+        // The camera/gallery capture failure belongs to this page only. Keep
+        // it on the OCR provider so it can never resurface as a stale banner
+        // on the text or voice screens, which watch translationProvider.
+        transNotifier.clearError();
+        ref.read(ocrProvider.notifier).setError(failure.message);
       },
       (result) async {
         final transRepo = ref.read(translationRepositoryProvider);
@@ -67,6 +83,7 @@ class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
   @override
   Widget build(BuildContext context) {
     final transState = ref.watch(translationProvider);
+    final ocrState = ref.watch(ocrProvider);
     final transNotifier = ref.read(translationProvider.notifier);
 
     return Scaffold(
@@ -158,11 +175,17 @@ class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
             const SizedBox(height: 16),
             if (transState.status == TranslationStatus.loading)
               const LoadingDisplay(message: 'Processing translation...'),
-            if (transState.status == TranslationStatus.error)
+            if (transState.status == TranslationStatus.error ||
+                ocrState.status == OcrStatus.error)
               ErrorDisplay(
-                message: transState.errorMessage ?? 'Translation failed.',
+                message: ocrState.errorMessage ??
+                    transState.errorMessage ??
+                    'Translation failed.',
                 actionLabel: 'Try Again',
-                onAction: () => transNotifier.reset(),
+                onAction: () {
+                  transNotifier.reset();
+                  ref.read(ocrProvider.notifier).clearError();
+                },
               ),
             if (transState.status == TranslationStatus.success &&
                 transState.result != null)
