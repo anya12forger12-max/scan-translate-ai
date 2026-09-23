@@ -30,14 +30,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     super.dispose();
   }
 
-  void _handleSignUp() {
+  Future<void> _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
       HapticUtils.mediumImpact();
-      ref.read(authProvider.notifier).signUpWithEmail(
+      await ref.read(authProvider.notifier).signUpWithEmail(
             _emailController.text.trim(),
             _passwordController.text,
             _nameController.text.trim(),
           );
+      if (!mounted) return;
+      if (ref.read(authProvider).status == AuthStatus.authenticated) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
