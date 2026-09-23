@@ -133,7 +133,7 @@ class _CameraTranslationPageState extends ConsumerState<CameraTranslationPage> {
                     Text(
                       'Take a photo or select from gallery\nto translate text in the image',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       textAlign: TextAlign.center,
                     ),

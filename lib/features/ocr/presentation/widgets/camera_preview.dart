@@ -40,7 +40,7 @@ class CameraPreviewPlaceholder extends StatelessWidget {
           Text(
             'Select an image to recognize text',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.textSecondaryOf(context),
             ),
           ),
           const SizedBox(height: 24),

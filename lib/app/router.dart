@@ -78,11 +78,11 @@ class AppRouter {
 
       default:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
+          builder: (context) => Scaffold(
             body: Center(
               child: Text(
                 'Route not found: ${settings.name}',
-                style: const TextStyle(color: AppColors.error),
+                style: TextStyle(color: AppColors.errorOf(context)),
               ),
             ),
           ),

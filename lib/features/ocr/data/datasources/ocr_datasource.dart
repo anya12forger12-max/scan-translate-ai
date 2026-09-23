@@ -32,8 +32,25 @@ class OcrRemoteDataSource {
     } on OcrException {
       rethrow;
     } catch (e) {
-      throw OcrException('Failed to capture image: ${e.toString()}');
+      throw OcrException(_friendlyCaptureMessage(e));
     }
+  }
+
+  static String _friendlyCaptureMessage(Object error) {
+    final text = error.toString();
+    if (text.contains('camera_access_denied') ||
+        text.toLowerCase().contains('camera') &&
+            text.toLowerCase().contains('denied')) {
+      return 'Camera access is denied. Please allow camera permission in '
+          'Settings and try again.';
+    }
+    if (text.contains('photo_access_denied') ||
+        text.contains('already_active') ||
+        text.contains('camera_access_restricted')) {
+      return 'The camera is currently unavailable. Close other apps using the '
+          'camera and try again.';
+    }
+    return 'Something went wrong while capturing the image. Please try again.';
   }
 
   Future<Map<String, dynamic>> recognizeTextFromGallery() async {

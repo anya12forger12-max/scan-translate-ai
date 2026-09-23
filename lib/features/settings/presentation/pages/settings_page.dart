@@ -82,7 +82,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                 ),
                               ),
                             )
-                          : const Icon(Icons.person, color: AppColors.primary),
+                          : Icon(Icons.person, color: AppColors.primaryOf(context)),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -96,7 +96,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           Text(
                             user.email,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: AppColors.textSecondaryOf(context),
                             ),
                           ),
                         ],
@@ -184,7 +184,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: Text(
                 '${AppConstants.appName} v${_version ?? AppConstants.appVersion}',
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryOf(context),
                 ),
               ),
             ),
@@ -288,7 +288,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               Navigator.pop(context);
               ref.read(authProvider.notifier).deleteAccount();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorOf(context)),
             child: const Text('Delete'),
           ),
         ],
@@ -301,7 +301,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       context: context,
       applicationName: AppConstants.appName,
       applicationVersion: _version ?? AppConstants.appVersion,
-      applicationIcon: const Icon(Icons.translate_rounded, size: 48, color: AppColors.primary),
+      applicationIcon: Icon(Icons.translate_rounded, size: 48, color: AppColors.primaryOf(context)),
       children: [
         const Text('Scan QR codes, barcodes, recognize text, and translate content with AI-powered technology.'),
       ],

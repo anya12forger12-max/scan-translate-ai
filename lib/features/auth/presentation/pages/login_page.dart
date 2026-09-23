@@ -60,10 +60,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 children: [
                   Semantics(
                     label: 'Scan & Translate AI logo',
-                    child: const Icon(
+                    child: Icon(
                       Icons.translate_rounded,
                       size: 80,
-                      color: AppColors.primary,
+                      color: AppColors.primaryOf(context),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -75,7 +75,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: AppColors.primaryOf(context),
                       ),
                     ),
                   ),
@@ -86,7 +86,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       'Scan, Translate, Simplify',
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                     ),
                   ),
@@ -129,7 +129,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       child: Text(
                         'Forgot Password?',
                         style: AppTypography.labelLarge.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.primaryOf(context),
                         ),
                       ),
                     ),
@@ -149,7 +149,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           child: Text(
                             errorMessage,
                             style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.error,
+                              color: AppColors.errorOf(context),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -188,7 +188,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       Text(
                         "Don't have an account? ",
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          color: AppColors.textSecondaryOf(context),
                         ),
                       ),
                       TextButton(

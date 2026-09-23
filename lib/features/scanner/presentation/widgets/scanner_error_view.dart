@@ -32,10 +32,10 @@ class ScannerErrorView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.videocam_off_rounded,
                 size: 48,
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
               ),
               const SizedBox(height: 12),
               Text(
@@ -47,7 +47,7 @@ class ScannerErrorView extends StatelessWidget {
               Text(
                 message,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryOf(context),
                 ),
                 textAlign: TextAlign.center,
               ),

@@ -91,7 +91,7 @@ class HistoryListItem extends StatelessWidget {
                         Text(
                           dateFormat.format(item.scannedAt),
                           style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                           ),
                         ),
                       ],
@@ -126,13 +126,13 @@ class HistoryListItem extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete_outline, size: 18, color: AppColors.error),
-                            SizedBox(width: 8),
-                            Text('Delete'),
+                            Icon(Icons.delete_outline, size: 18, color: AppColors.errorOf(context)),
+                            const SizedBox(width: 8),
+                            const Text('Delete'),
                           ],
                         ),
                       ),

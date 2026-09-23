@@ -51,7 +51,7 @@ class SettingsTile extends StatelessWidget {
                 ? Text(
                     subtitle!,
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                   )
                 : null,

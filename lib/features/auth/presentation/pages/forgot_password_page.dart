@@ -69,10 +69,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 children: [
                   Semantics(
                     label: 'Reset password icon',
-                    child: const Icon(
+                    child: Icon(
                       Icons.lock_reset_rounded,
                       size: 80,
-                      color: AppColors.primary,
+                      color: AppColors.primaryOf(context),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -90,7 +90,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     child: Text(
                       'Enter your email address and we will send you a link to reset your password.',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -121,7 +121,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           child: Text(
                             _errorMessage!,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.error,
+                              color: AppColors.errorOf(context),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -159,20 +159,20 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                             const Icon(
                               Icons.check_circle,
                               size: 64,
-                              color: AppColors.success,
+                              color: AppColors.successText,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Email Sent!',
                               style: AppTypography.headlineSmall.copyWith(
-                                color: AppColors.success,
+                                color: AppColors.successText,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Check your email for the password reset link.',
                               style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
+                                color: AppColors.textSecondaryOf(context),
                               ),
                               textAlign: TextAlign.center,
                             ),

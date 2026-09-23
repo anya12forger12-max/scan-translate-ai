@@ -74,7 +74,7 @@ class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
                       child: Text(
                         'Privacy Policy',
                         style: AppTypography.headlineLarge.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.primaryOf(context),
                         ),
                       ),
                     ),
@@ -84,7 +84,7 @@ class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
                       child: Text(
                         'Last Updated: September 2026',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: AppColors.textSecondaryOf(context),
                         ),
                       ),
                     ),
@@ -243,7 +243,7 @@ class _PrivacyPolicyPageState extends ConsumerState<PrivacyPolicyPage> {
             Text(
               content,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
                 height: 1.5,
               ),
             ),
@@ -271,35 +271,35 @@ class TermsPage extends StatelessWidget {
             Text(
               'Terms & Conditions',
               style: AppTypography.headlineLarge.copyWith(
-                color: AppColors.primary,
+                color: AppColors.primaryOf(context),
               ),
             ),
             const SizedBox(height: 24),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '1. Acceptance of Terms',
               'By downloading, installing, or using Scan & Translate AI, you agree to be bound by these Terms & Conditions. If you do not agree to these terms, do not use the application.',
             ),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '2. License',
               'We grant you a limited, non-exclusive, non-transferable license to use the application for personal, non-commercial purposes. You may not modify, reverse engineer, or distribute the application without our written consent.',
             ),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '3. User Responsibilities',
               'You are responsible for maintaining the confidentiality of your account credentials. You agree not to use the application for any unlawful purpose or in violation of any applicable laws or regulations.',
             ),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '4. Intellectual Property',
               'All intellectual property rights in the application, including but not limited to code, design, and branding, are owned by ScanTranslateAI. You may not reproduce, distribute, or create derivative works without permission.',
             ),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '5. Limitation of Liability',
               'The application is provided "as is" without warranties of any kind. We shall not be liable for any damages arising from the use or inability to use the application, including but not limited to data loss or service interruption.',
             ),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '6. Termination',
               'We reserve the right to terminate or suspend your access to the application at any time, with or without cause, including for violation of these terms.',
             ),
-            _buildTermsSection(
+            _buildTermsSection(context,
               '7. Governing Law',
               'These terms shall be governed by and construed in accordance with applicable laws. Any disputes shall be resolved in the courts of the jurisdiction where the company is registered.',
             ),
@@ -309,7 +309,7 @@ class TermsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTermsSection(String title, String content) {
+  Widget _buildTermsSection(BuildContext context, String title, String content) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -323,7 +323,7 @@ class TermsPage extends StatelessWidget {
           Text(
             content,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.textSecondaryOf(context),
               height: 1.5,
             ),
           ),

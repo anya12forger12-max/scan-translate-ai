@@ -67,7 +67,7 @@ class OcrTextDisplay extends StatelessWidget {
                   child: Text(
                     'Language: ${detectedLanguage!.toUpperCase()}',
                     style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.info,
+                      color: AppColors.infoText,
                     ),
                   ),
                 ),
@@ -158,9 +158,9 @@ class _ActionChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: AppColors.primary),
+                Icon(icon, size: 18, color: AppColors.primaryOf(context)),
                 const SizedBox(width: 4),
-                Text(label, style: AppTypography.labelMedium.copyWith(color: AppColors.primary)),
+                Text(label, style: AppTypography.labelMedium.copyWith(color: AppColors.primaryOf(context))),
               ],
             ),
           ),

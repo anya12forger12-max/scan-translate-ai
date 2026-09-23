@@ -91,7 +91,7 @@ class TranslationCard extends StatelessWidget {
                           child: Text(
                             '${(result.confidence * 100).toInt()}%',
                             style: AppTypography.labelSmall.copyWith(
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -163,7 +163,7 @@ class _TranslationBox extends StatelessWidget {
                 child: Text(
                   '$label (${language.toUpperCase()})',
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                   ),
                 ),
               ),
@@ -209,7 +209,7 @@ class _IconButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: Icon(icon, size: 20, color: AppColors.primary),
+            child: Icon(icon, size: 20, color: AppColors.primaryOf(context)),
           ),
         ),
       ),

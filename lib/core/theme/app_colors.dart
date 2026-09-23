@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFF6C63FF);
+  static const Color primary = Color(0xFF5F53E8);
   static const Color primaryLight = Color(0xFF9D97FF);
   static const Color primaryDark = Color(0xFF4A42D4);
 
@@ -21,11 +21,15 @@ class AppColors {
   static const Color textPrimary = Color(0xFF2D2D3A);
   static const Color textSecondary = Color(0xFF6E6E80);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
+  static const Color secondaryText = Color(0xFF00332A);
 
   static const Color error = Color(0xFFE53935);
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFFC107);
   static const Color info = Color(0xFF2196F3);
+  static const Color successText = Color(0xFF1B5E20);
+  static const Color warningText = Color(0xFF9A6700);
+  static const Color infoText = Color(0xFF0D47A1);
 
   static const Color darkBackground = Color(0xFF121220);
   static const Color darkSurface = Color(0xFF1E1E2E);
@@ -37,10 +41,28 @@ class AppColors {
   static const Color darkShimmerBase = Color(0xFF2A2A3A);
   static const Color darkShimmerHighlight = Color(0xFF3A3A4A);
 
+  static Color textPrimaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkTextPrimary
+          : textPrimary;
+
+  static Color textSecondaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkTextSecondary
+          : textSecondary;
+
+  static Color primaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? primaryLight : primary;
+
+  static Color errorOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFFEF5350)
+          : const Color(0xFFD32F2F);
+
   static const Color glassLight = Color(0xCCFFFFFF);
   static const Color glassDark = Color(0xCC1E1E2E);
 
-  static const Color qrColor = Color(0xFF6C63FF);
+  static const Color qrColor = Color(0xFF5F53E8);
   static const Color barcodeColor = Color(0xFF00D9A6);
   static const Color ocrColor = Color(0xFFFF6B6B);
   static const Color translationColor = Color(0xFFFFB74D);

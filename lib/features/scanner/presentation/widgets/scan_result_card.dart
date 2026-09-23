@@ -86,7 +86,7 @@ class ScanResultCard extends StatelessWidget {
                 result.rawValue,
                 style: AppTypography.bodyMedium.copyWith(
                   fontFamily: 'monospace',
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ),
@@ -180,7 +180,7 @@ class _ActionButton extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: AppTypography.labelSmall.copyWith(color: AppColors.primary),
+                style: AppTypography.labelSmall.copyWith(color: AppColors.primaryOf(context)),
               ),
             ],
           ),

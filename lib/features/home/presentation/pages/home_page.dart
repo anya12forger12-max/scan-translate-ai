@@ -44,7 +44,7 @@ class HomePage extends ConsumerWidget {
                               Text(
                                 'Hello,',
                                 style: AppTypography.bodyLarge.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.textSecondaryOf(context),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -74,19 +74,19 @@ class HomePage extends ConsumerWidget {
                                         width: 48,
                                         height: 48,
                                         fit: BoxFit.cover,
-                                        placeholder: (_, _) => const Icon(
+                                        placeholder: (_, _) => Icon(
                                           Icons.person_rounded,
-                                          color: AppColors.primary,
+                                          color: AppColors.primaryOf(context),
                                         ),
-                                        errorWidget: (_, _, _) => const Icon(
+                                        errorWidget: (_, _, _) => Icon(
                                           Icons.person_rounded,
-                                          color: AppColors.primary,
+                                          color: AppColors.primaryOf(context),
                                         ),
                                       ),
                                     )
-                                  : const Icon(
+                                  : Icon(
                                       Icons.person_rounded,
-                                      color: AppColors.primary,
+                                      color: AppColors.primaryOf(context),
                                     ),
                             ),
                           ),
@@ -109,7 +109,7 @@ class HomePage extends ConsumerWidget {
                     Text(
                       'Scan, translate, and explore',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                     ),
                   ],

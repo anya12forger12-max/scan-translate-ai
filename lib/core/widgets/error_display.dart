@@ -33,7 +33,7 @@ class ErrorDisplay extends StatelessWidget {
             Text(
               message,
               style: AppTypography.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
               ),
               textAlign: TextAlign.center,
             ),
@@ -78,7 +78,7 @@ class ErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.errorOf(context)),
             ),
           ),
           if (onDismiss != null)

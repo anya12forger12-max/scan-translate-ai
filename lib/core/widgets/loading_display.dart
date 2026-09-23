@@ -32,7 +32,7 @@ class LoadingDisplay extends StatelessWidget {
             Text(
               message!,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
               ),
             ),
           ],

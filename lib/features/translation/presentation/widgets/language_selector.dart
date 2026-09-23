@@ -39,7 +39,7 @@ class LanguageSelector extends StatelessWidget {
             value: selectedCode,
             isExpanded: true,
             icon: const Icon(Icons.arrow_drop_down_rounded),
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimaryOf(context)),
             items: items.map((language) {
               return DropdownMenuItem<String>(
                 value: language.code,
@@ -77,7 +77,7 @@ class LanguageSwapButton extends StatelessWidget {
         ),
         child: IconButton(
           onPressed: onTap,
-          icon: const Icon(Icons.swap_horiz_rounded, color: AppColors.primary),
+          icon: Icon(Icons.swap_horiz_rounded, color: AppColors.primaryOf(context)),
           tooltip: 'Swap languages',
         ),
       ),

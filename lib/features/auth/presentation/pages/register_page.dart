@@ -76,7 +76,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     child: Text(
                       'Fill in your details to get started',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                     ),
                   ),
@@ -139,7 +139,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           child: Text(
                             errorMessage,
                             style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.error,
+                              color: AppColors.errorOf(context),
                             ),
                             textAlign: TextAlign.center,
                           ),

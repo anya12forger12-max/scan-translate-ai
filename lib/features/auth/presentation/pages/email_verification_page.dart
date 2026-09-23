@@ -25,7 +25,7 @@ class EmailVerificationPage extends ConsumerWidget {
                   child: const Icon(
                     Icons.mark_email_unread_rounded,
                     size: 80,
-                    color: AppColors.warning,
+                    color: AppColors.warningText,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -43,7 +43,7 @@ class EmailVerificationPage extends ConsumerWidget {
                   child: Text(
                     'We have sent a verification email to:\n${user?.email ?? ''}\n\nPlease check your inbox and click the verification link to activate your account.',
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                     textAlign: TextAlign.center,
                   ),
