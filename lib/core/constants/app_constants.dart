@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'Scan & Translate AI';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.2.24';
   static const String companyName = 'ScanTranslateAI';
   static const String supportEmail = 'support@scantranslateai.com';
   static const String privacyPolicyUrl = 'https://scantranslateai.com/privacy';
