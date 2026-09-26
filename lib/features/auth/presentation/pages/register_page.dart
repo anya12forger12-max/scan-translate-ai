@@ -22,6 +22,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(authProvider.notifier).clearError();
+      }
+    });
+  }
+
+  void _handleBack() {
+    ref.read(authProvider.notifier).clearError();
+    Navigator.of(context).pop();
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
@@ -53,6 +68,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(onPressed: _handleBack),
         title: Semantics(
           label: 'Create Account page',
           child: const Text('Create Account'),

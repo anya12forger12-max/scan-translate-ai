@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/di/providers.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -37,9 +39,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._authRepository) : super(const AuthState()) {
     _authRepository.authStateChanges.listen((user) {
       if (user != null) {
+        final current = state.user;
         state = state.copyWith(
           status: AuthStatus.authenticated,
-          user: user,
+          user: (current != null && current.uid == user.uid) ? current : user,
           clearError: true,
         );
       } else {
@@ -54,126 +57,96 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signInWithEmail(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
-    final result = await _authRepository.signInWithEmail(
-      email: email,
-      password: password,
-    );
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
-      (user) {
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          user: user,
-          clearError: true,
-        );
-      },
-    );
+    try {
+      final result = await _authRepository.signInWithEmail(
+        email: email,
+        password: password,
+      );
+      result.fold(_fail, _succeed);
+    } catch (e) {
+      _failUnexpected(e);
+    }
   }
 
   Future<void> signUpWithEmail(
       String email, String password, String name) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
-    final result = await _authRepository.signUpWithEmail(
-      email: email,
-      password: password,
-      name: name,
-    );
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
-      (user) {
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          user: user,
-          clearError: true,
-        );
-      },
-    );
+    try {
+      final result = await _authRepository.signUpWithEmail(
+        email: email,
+        password: password,
+        name: name,
+      );
+      result.fold(_fail, _succeed);
+    } catch (e) {
+      _failUnexpected(e);
+    }
   }
 
   Future<void> signInWithGoogle() async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     try {
       final result = await _authRepository.signInWithGoogle();
-      result.fold(
-        (failure) {
-          state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message,
-          );
-        },
-        (user) {
-          state = state.copyWith(
-            status: AuthStatus.authenticated,
-            user: user,
-            clearError: true,
-          );
-        },
-      );
+      result.fold(_fail, _succeed);
     } catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: 'Google sign-in failed: ${e.toString()}',
-      );
+      _failUnexpected(e);
     }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
-    final result = await _authRepository.sendPasswordResetEmail(email);
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
-      (_) {
-        state = state.copyWith(status: AuthStatus.initial);
-      },
-    );
+    try {
+      final result = await _authRepository.sendPasswordResetEmail(email);
+      result.fold(
+        _fail,
+        (_) {
+          state = state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearError: true,
+          );
+        },
+      );
+    } catch (e) {
+      _failUnexpected(e);
+    }
   }
 
   Future<void> sendEmailVerification() async {
-    final result = await _authRepository.sendEmailVerification();
-    result.fold(
-      (failure) {
-        state = state.copyWith(errorMessage: failure.message);
-      },
-      (_) {},
-    );
+    try {
+      final result = await _authRepository.sendEmailVerification();
+      result.fold(
+        _fail,
+        (_) {},
+      );
+    } catch (e) {
+      _failUnexpected(e);
+    }
   }
 
   Future<void> signOut() async {
-    await _authRepository.signOut();
+    try {
+      await _authRepository.signOut();
+    } catch (e) {
+      _failUnexpected(e);
+    }
   }
 
   Future<void> deleteAccount() async {
     state = state.copyWith(status: AuthStatus.loading);
-    final result = await _authRepository.deleteAccount();
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
-      (_) {
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          clearUser: true,
-        );
-      },
-    );
+    try {
+      final result = await _authRepository.deleteAccount();
+      result.fold(
+        _fail,
+        (_) {
+          state = state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearUser: true,
+          );
+        },
+      );
+    } catch (e) {
+      _failUnexpected(e);
+    }
   }
 
   Future<bool> isPrivacyPolicyAccepted() async {
@@ -185,31 +158,59 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// connection does not bounce the user into the app while the backend still
   /// expects acceptance on the next launch).
   Future<bool> acceptPrivacyPolicy(String version) async {
-    final result = await _authRepository.acceptPrivacyPolicy(version);
-    var accepted = false;
-    result.fold(
-      (failure) {
-        state = state.copyWith(errorMessage: failure.message);
-      },
-      (_) {
-        accepted = true;
-        if (state.user != null) {
-          state = state.copyWith(
-            user: AppUser(
-              uid: state.user!.uid,
-              email: state.user!.email,
-              displayName: state.user!.displayName,
-              photoUrl: state.user!.photoUrl,
-              role: state.user!.role,
-              emailVerified: state.user!.emailVerified,
-              privacyPolicyAccepted: true,
-              createdAt: state.user!.createdAt,
-            ),
-          );
-        }
-      },
+    try {
+      final result = await _authRepository.acceptPrivacyPolicy(version);
+      var accepted = false;
+      result.fold(
+        (failure) {
+          state = state.copyWith(errorMessage: failure.message);
+        },
+        (_) {
+          accepted = true;
+          if (state.user != null) {
+            state = state.copyWith(
+              user: AppUser(
+                uid: state.user!.uid,
+                email: state.user!.email,
+                displayName: state.user!.displayName,
+                photoUrl: state.user!.photoUrl,
+                role: state.user!.role,
+                emailVerified: state.user!.emailVerified,
+                privacyPolicyAccepted: true,
+                createdAt: state.user!.createdAt,
+              ),
+            );
+          }
+        },
+      );
+      return accepted;
+    } catch (e) {
+      _failUnexpected(e);
+      return false;
+    }
+  }
+
+  void _succeed(AppUser user) {
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+      clearError: true,
     );
-    return accepted;
+  }
+
+  void _fail(Failure failure) {
+    state = state.copyWith(
+      status: AuthStatus.error,
+      errorMessage: failure.message,
+    );
+  }
+
+  void _failUnexpected(Object error) {
+    debugPrint('Auth error: $error');
+    state = state.copyWith(
+      status: AuthStatus.error,
+      errorMessage: 'Something went wrong. Please try again.',
+    );
   }
 
   void clearError() {

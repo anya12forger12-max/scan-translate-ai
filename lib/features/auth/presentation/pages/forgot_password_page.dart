@@ -20,6 +20,21 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(authProvider.notifier).clearError();
+      }
+    });
+  }
+
+  void _handleBack() {
+    ref.read(authProvider.notifier).clearError();
+    Navigator.of(context).pop();
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
@@ -53,6 +68,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(onPressed: _handleBack),
         title: Semantics(
           label: 'Reset Password page',
           child: const Text('Reset Password'),
@@ -184,7 +200,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     SizedBox(
                       height: 56,
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: _handleBack,
                         child: const Text('Back to Sign In'),
                       ),
                     ),
