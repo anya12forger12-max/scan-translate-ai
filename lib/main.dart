@@ -25,11 +25,14 @@ void main() async {
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
+    // Platform errors (camera, sensor, permission) are often recoverable.
+    // Record them so they are visible in Crashlytics, but do NOT mark them
+    // as fatal — doing so would count every recoverable platform failure as
+    // a crash in the Play Console and inflate the crash-free metric.
     if (firebaseReady) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
     }
-    return false;
+    return true;
   };
 
   final container = ProviderContainer(overrides: []);

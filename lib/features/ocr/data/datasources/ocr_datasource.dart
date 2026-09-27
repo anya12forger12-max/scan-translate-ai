@@ -12,7 +12,7 @@ class OcrRemoteDataSource {
       final inputImage = InputImage.fromFilePath(imagePath);
       return await _processImage(inputImage);
     } catch (e) {
-      throw OcrException('Failed to recognize text: ${e.toString()}');
+      throw const OcrException('Failed to recognize text.');
     }
   }
 
@@ -69,7 +69,7 @@ class OcrRemoteDataSource {
     } on OcrException {
       rethrow;
     } catch (e) {
-      throw OcrException('Failed to pick image: ${e.toString()}');
+      throw const OcrException('Failed to pick image.');
     }
   }
 
@@ -117,7 +117,7 @@ class OcrRemoteDataSource {
       };
     } catch (e) {
       if (e is OcrException) rethrow;
-      throw OcrException('Text recognition failed: ${e.toString()}');
+      throw const OcrException('Text recognition failed.');
     } finally {
       await textRecognizer.close();
     }

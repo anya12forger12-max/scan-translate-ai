@@ -62,7 +62,7 @@ class TranslationRemoteDataSource {
         await translator.close();
       }
     } catch (e) {
-      throw TranslationException('Translation failed: ${e.toString()}');
+      throw const TranslationException('Translation failed.');
     }
   }
 
@@ -133,7 +133,7 @@ class TranslationRemoteDataSource {
       return recognizedText;
     } catch (e) {
       if (e is SpeechException) rethrow;
-      throw SpeechException('Speech recognition failed: ${e.toString()}');
+      throw const SpeechException('Speech recognition failed.');
     } finally {
       if (identical(_cancelSpeechCompleter, cancelCompleter)) {
         _cancelSpeechCompleter = null;
@@ -164,7 +164,7 @@ class TranslationRemoteDataSource {
       await flutterTts.setSpeechRate(0.5);
       await flutterTts.speak(text);
     } catch (e) {
-      throw SpeechException('Text-to-speech failed: ${e.toString()}');
+      throw const SpeechException('Text-to-speech failed.');
     }
   }
 
