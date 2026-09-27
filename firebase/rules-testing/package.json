@@ -1,0 +1,13 @@
+{
+  "name": "scan-translate-ai-firebase-rules-testing",
+  "private": true,
+  "description": "Firebase Emulator security tests for Scan Translate AI Firestore/Storage rules",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore,storage --project scan-translate-ai \"node --test security.rules.test.js\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase-admin": "^12.7.0",
+    "firebase-tools": "15.29.0"
+  }
+}

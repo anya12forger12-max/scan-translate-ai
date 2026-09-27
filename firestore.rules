@@ -79,10 +79,12 @@ service cloud.firestore {
       allow delete: if isAuthenticated()
         && (isOwner(userId) || isAdmin());
 
-      // Subcollections
-      match /{document=**} {
-        allow read, write: if isAuthenticated() && isOwner(userId);
-      }
+      // NOTE: no blanket "subcollections" wildcard here. A recursive
+      // match /{document=**} also matches the parent document itself, which
+      // would grant the owner unvalidated write on users/{userId} and bypass
+      // isValidUserData/isValidUserUpdate/hasNoPrivilegeFields. The app uses
+      // only top-level collections; any future users/ subcollection must be
+      // allowed explicitly.
     }
 
     // Scan History collection
