@@ -20,6 +20,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  var _privacyAccepted = false;
 
   @override
   void initState() {
@@ -46,6 +47,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   Future<void> _handleSignUp() async {
+    if (!_privacyAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must explicitly accept the Privacy Policy to proceed.'),
+        ),
+      );
+      return;
+    }
     if (_formKey.currentState!.validate()) {
       HapticUtils.mediumImpact();
       await ref.read(authProvider.notifier).signUpWithEmail(
@@ -144,7 +153,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       _passwordController.text,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'Privacy policy consent checkbox',
+                    child: CheckboxListTile(
+                      title: const Text(
+                        'I explicitly accept the Privacy Policy to use Scan & Translate AI.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      value: _privacyAccepted,
+                      onChanged: (v) => setState(() => _privacyAccepted = v ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   if (errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),

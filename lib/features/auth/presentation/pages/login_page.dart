@@ -18,6 +18,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  var _privacyAccepted = false;
 
   @override
   void dispose() {
@@ -27,6 +28,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _handleLogin() {
+    if (!_privacyAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must explicitly accept the Privacy Policy to proceed.'),
+        ),
+      );
+      return;
+    }
     if (_formKey.currentState!.validate()) {
       HapticUtils.mediumImpact();
       ref.read(authProvider.notifier).signInWithEmail(
@@ -37,6 +46,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _handleGoogleSignIn() {
+    if (!_privacyAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must explicitly accept the Privacy Policy to proceed.'),
+        ),
+      );
+      return;
+    }
     HapticUtils.mediumImpact();
     ref.read(authProvider.notifier).signInWithGoogle();
   }
@@ -134,7 +151,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'Privacy policy consent checkbox',
+                    child: CheckboxListTile(
+                      title: const Text(
+                        'I explicitly accept the Privacy Policy to use Scan & Translate AI.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      value: _privacyAccepted,
+                      onChanged: (v) => setState(() => _privacyAccepted = v ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   if (errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
