@@ -175,3 +175,88 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-android
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Refuse to publish a release whose version would lie
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(grep -m1 '^version:' pubspec.yaml | sed -E "s/^version:[[:space:]]*['\"]?([^'\"+[:space:]]+).*/\1/")
+          echo "tag=$tag  pubspec=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pubspec version $pkg. Publishing now would ship a build whose About screen reports a different version. Bump pubspec and move the tag instead."
+            exit 1
+          fi
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release
+          path: build
+
+      - name: Collect release assets
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp build/app/outputs/bundle/release/app-release.aab dist/app-release.aab
+          cp build/app/outputs/flutter-apk/app-release.apk dist/app-release.apk
+          cd dist
+          sha256sum app-release.aab app-release.apk > SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Build release notes
+        run: |
+          set -euo pipefail
+          if prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null); then
+            changes=$(git log --no-merges --pretty='- %s (%h)' "${prev}..${GITHUB_REF_NAME}")
+            compare="https://github.com/${GITHUB_REPOSITORY}/compare/${prev}...${GITHUB_REF_NAME}"
+          else
+            changes="- Initial tagged release."
+            compare="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}"
+          fi
+          {
+            echo "### What's Changed"
+            echo "$changes"
+            echo
+            echo "**Full Changelog**: $compare"
+            echo
+            echo "### Supported Android Versions"
+            echo "- Android 7.0 (API 24) and later."
+            echo "- Built and tested on Android 14 (API 34) / Android 15 (API 36)."
+            echo
+            echo "### Known Limitations"
+            echo "- Camera and microphone access required for translation features; graceful denial handling with retry."
+            echo "- Offline translation uses cached on-device models; cloud fallback requires network."
+            echo "- History stores up to 100 entries locally; favorites up to 200."
+            echo
+            echo "### Checksums (sha256)"
+            echo '```'
+            cat dist/SHA256SUMS.txt
+            echo '```'
+          } > NOTES.md
+          cat NOTES.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file NOTES.md \
+            dist/app-release.aab \
+            dist/app-release.apk \
+            dist/SHA256SUMS.txt
