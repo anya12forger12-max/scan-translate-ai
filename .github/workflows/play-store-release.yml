@@ -209,9 +209,31 @@ jobs:
       - name: Collect release assets
         run: |
           set -euo pipefail
+          # upload-artifact stores each file relative to the least common ancestor of
+          # the uploaded paths, so the extracted layout is bundle/release/... and
+          # flutter-apk/... - not the build/... tree they came from. Locate the
+          # artifacts instead of assuming a layout, and fail loudly if either is
+          # missing or ambiguous rather than publishing a partial release.
+          echo "Extracted artifact layout:"
+          find build -type f | sort
+          mapfile -t aabs < <(find build -type f -name 'app-release.aab')
+          mapfile -t apks < <(find build -type f -name 'app-release.apk')
+          if [ "${#aabs[@]}" -ne 1 ] || [ "${#apks[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one app-release.aab and one app-release.apk, found ${#aabs[@]} and ${#apks[@]}."
+            exit 1
+          fi
           mkdir -p dist
-          cp build/app/outputs/bundle/release/app-release.aab dist/app-release.aab
-          cp build/app/outputs/flutter-apk/app-release.apk dist/app-release.apk
+          cp "${aabs[0]}" dist/app-release.aab
+          cp "${apks[0]}" dist/app-release.apk
+          # A truncated or empty upload would still pass sha256sum -c, so reject
+          # implausibly small assets before they can be published.
+          for asset in dist/app-release.aab dist/app-release.apk; do
+            bytes=$(stat -c %s "$asset")
+            if [ "$bytes" -lt 1048576 ]; then
+              echo "::error::$asset is only $bytes bytes; refusing to publish a truncated asset."
+              exit 1
+            fi
+          done
           cd dist
           sha256sum app-release.aab app-release.apk > SHA256SUMS.txt
           sha256sum -c SHA256SUMS.txt
