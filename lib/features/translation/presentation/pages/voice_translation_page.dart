@@ -155,7 +155,20 @@ class _VoiceTranslationPageState extends ConsumerState<VoiceTranslationPage> {
   }
 
   void _translateText(String text) {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty) {
+      // Previously a silent `return`: the Translate button was still tappable
+      // with no recognized speech, so tapping it did nothing at all and looked
+      // like a dead control. Line 109 (partial results) is also a caller, and
+      // the recognizer can hand back an empty partial.
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('No speech recognized. Record something first.'),
+          ),
+        );
+      return;
+    }
 
     final transNotifier = ref.read(translationProvider.notifier);
     final transState = ref.read(translationProvider);

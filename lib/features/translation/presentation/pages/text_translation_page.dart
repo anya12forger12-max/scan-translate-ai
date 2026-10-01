@@ -27,6 +27,11 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
   @override
   void initState() {
     super.initState();
+    // The input's own content drives the clear-button suffix and the enabled
+    // state, so the widget must rebuild as the user types. Without this the
+    // suffix icon is decided by whatever the text happened to be at the last
+    // unrelated rebuild.
+    _textController.addListener(_onTextChanged);
     // A fresh visit must never surface an error left over from a previous
     // screen; each page only ever displays state that it produced itself.
     // Riverpod forbids mutating providers during initState/dispose, so the
@@ -43,13 +48,27 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
+  void _onTextChanged() => setState(() {});
+
   void _translate() {
-    if (_textController.text.trim().isEmpty) return;
+    final text = _textController.text.trim();
+    if (text.isEmpty) {
+      // Previously this was a silent `return`: tapping Translate on an empty
+      // field did nothing at all, which reads as a broken button rather than
+      // as "there is nothing to translate".
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Enter some text to translate.')),
+        );
+      return;
+    }
     HapticUtils.mediumImpact();
     final state = ref.read(translationProvider);
     final repo = ref.read(translationRepositoryProvider);
@@ -57,7 +76,7 @@ class _TextTranslationPageState extends ConsumerState<TextTranslationPage> {
     ref.read(translationProvider.notifier).setLoading();
     repo
         .translateText(
-          text: _textController.text.trim(),
+          text: text,
           targetLanguage: state.targetLanguage,
           sourceLanguage: state.sourceLanguage == 'auto'
               ? null
