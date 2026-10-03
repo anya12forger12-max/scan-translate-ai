@@ -18,11 +18,6 @@ class PermissionUtils {
     return status.isGranted;
   }
 
-  static Future<bool> requestNotificationPermission() async {
-    final status = await ph.Permission.notification.request();
-    return status.isGranted;
-  }
-
   static Future<bool> hasCameraPermission() async {
     return await ph.Permission.camera.isGranted;
   }
