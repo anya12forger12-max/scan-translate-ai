@@ -216,4 +216,55 @@ void main() {
       expect(state().status, AuthStatus.error);
     });
   });
+
+  group('AuthNotifier bootstrap', () {
+    // A short stand-in for the 8s production bound so the tests stay fast.
+    const shortTimeout = Duration(milliseconds: 100);
+
+    late ProviderContainer boot;
+
+    setUp(() {
+      boot = ProviderContainer(overrides: [
+        authProvider.overrideWith(
+            (ref) => AuthNotifier(repo, bootstrapTimeout: shortTimeout)),
+      ]);
+      addTearDown(boot.dispose);
+      // Read the notifier so it is constructed and subscribed now: the fake's
+      // stream is a broadcast controller that drops events sent before anyone
+      // listens, and the bootstrap timer starts at construction.
+      boot.read(authProvider.notifier);
+    });
+
+    AuthState bootState() => boot.read(authProvider);
+
+    test('an uninitialisable auth layer falls back to sign-in, not the splash',
+        () async {
+      // Nothing is ever added to the repo's stream: the Firebase SDK could not
+      // initialise. Before the fix the app stayed on the splash indefinitely.
+      expect(bootState().status, AuthStatus.initial);
+
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(bootState().status, AuthStatus.unauthenticated);
+      expect(bootState().user, isNull);
+    });
+
+    test('a session resolved after the timeout still authenticates', () async {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(bootState().status, AuthStatus.unauthenticated);
+
+      await repo.addUserEvent(_user());
+      expect(bootState().status, AuthStatus.authenticated);
+      expect(bootState().user?.uid, 'u1');
+    });
+
+    test('a prompt session is not undone by the bootstrap timeout', () async {
+      await repo.addUserEvent(_user());
+      expect(bootState().status, AuthStatus.authenticated);
+
+      // Well past the bound: the timer must have been cancelled on the event.
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(bootState().status, AuthStatus.authenticated);
+      expect(bootState().user?.uid, 'u1');
+    });
+  });
 }

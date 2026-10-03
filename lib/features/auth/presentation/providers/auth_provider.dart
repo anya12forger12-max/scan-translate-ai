@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/di/providers.dart';
@@ -36,8 +38,37 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
 
-  AuthNotifier(this._authRepository) : super(const AuthState()) {
+  /// How long to wait for the first `authStateChanges` event before letting the
+  /// gate show the sign-in screen anyway.
+  ///
+  /// The gate renders a splash for [AuthStatus.initial], and only the
+  /// repository's first event moves it off `initial`. When the Firebase SDK
+  /// cannot initialise — no connectivity, a captive portal, DNS failure — no
+  /// event ever arrives and the app sits on the splash indefinitely with no
+  /// error and no way forward. Falling back to `unauthenticated` shows the
+  /// sign-in screen, which reports a real failure on submit instead of
+  /// freezing. A late event still corrects the state.
+  static const Duration defaultAuthBootstrapTimeout = Duration(seconds: 8);
+
+  Timer? _bootstrapTimer;
+
+  AuthNotifier(this._authRepository,
+      {Duration bootstrapTimeout = defaultAuthBootstrapTimeout})
+      : super(const AuthState()) {
+    _bootstrapTimer = Timer(bootstrapTimeout, () {
+      if (state.status != AuthStatus.initial) return;
+      debugPrint(
+          'Auth bootstrap timed out; showing sign-in instead of the splash');
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        clearUser: true,
+        clearError: true,
+      );
+    });
+
     _authRepository.authStateChanges.listen((user) {
+      _bootstrapTimer?.cancel();
+      _bootstrapTimer = null;
       if (user != null) {
         final current = state.user;
         state = state.copyWith(
@@ -53,6 +84,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _bootstrapTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> signInWithEmail(String email, String password) async {
