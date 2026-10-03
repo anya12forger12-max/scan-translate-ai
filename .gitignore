@@ -6,6 +6,10 @@ build/
 .idea/
 .vscode/
 *.lock
+# ...but the Dart dependency graph must be pinned: this is a shipping app,
+# so an unpinned lockfile makes every CI build resolve fresh dependencies.
+# radhika and securepass-pro both commit theirs; this keeps the three aligned.
+!pubspec.lock
 
 # Firebase
 firebase_service_account.json
