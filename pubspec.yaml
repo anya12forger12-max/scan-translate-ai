@@ -91,3 +91,31 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Poppins and Inter are bundled rather than fetched at runtime.
+  # google_fonts falls back to the platform default font with only a
+  # print() when a fetch fails, so an offline first launch would silently
+  # render in Roboto instead of the app's own typography. Bundling keeps
+  # the "works offline" promise the README makes about on-device ML.
+  # Weights match the ones actually used in lib/ (w400/w500/w600/w700).
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

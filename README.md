@@ -91,9 +91,10 @@ Latest signed prebuilt release (APK + AAB): see the [Releases](https://github.co
 ## Technology Stack
 
 - **Flutter / Dart** with **Riverpod** (state) and GoRouter (navigation)
-- **firebase_core / firebase_auth / cloud_firestore / firebase_analytics / firebase_crashlytics / firebase_messaging** and **google_sign_in**
-- **Google ML Kit**: `barcode_scanning`, `text_recognition`, `translation` — all on-device
-- **camera / image_picker / mobile_scanner** for capture and scanning
+- **firebase_core / firebase_auth / cloud_firestore / firebase_crashlytics** and **google_sign_in**; Analytics is reached through the native `firebase-analytics` SDK only, and there is no push messaging
+- **Google ML Kit**: `text_recognition` and `translation` — both on-device; barcode scanning is provided by **mobile_scanner** (which wraps ML Kit)
+- **image_picker / mobile_scanner** for capture and scanning; the camera plugin is pulled in transitively by `mobile_scanner`
+- **google_fonts** with **Poppins** and **Inter** bundled in `assets/fonts`, so typography never depends on a network fetch
 - **speech_to_text** for voice translation
 - Feature-first architecture: `auth`, `history`, `ocr`, `scanner`, `translation`, `settings`
 

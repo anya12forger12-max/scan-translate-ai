@@ -3,10 +3,17 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Poppins and Inter are bundled in assets/fonts and declared in
+  // pubspec.yaml, so no runtime fetch is needed or wanted. Disabling it
+  // turns a missing bundled face into a loud error instead of a silent
+  // fallback to the platform font.
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   bool firebaseReady = false;
   try {
