@@ -217,7 +217,7 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage>
                 MobileScanner(
                   controller: _scannerController,
                   onDetect: _handleDetect,
-                  errorBuilder: (context, error, child) => ScannerErrorView(
+                  errorBuilder: (context, error) => ScannerErrorView(
                     error: error,
                     onRetry: _retryScanner,
                   ),

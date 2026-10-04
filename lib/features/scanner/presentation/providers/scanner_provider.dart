@@ -86,8 +86,12 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
   }
 
   BarcodeFormatType _mapFormat(String format) {
+    // The keys are `BarcodeFormat.name` values from the mobile_scanner package.
+    // 7.x deprecated `itf` in favour of `itf14`, added the `itf2of5` pair, and
+    // added `microQrCode`, so those rows carry the newer names as well; without
+    // them the plugin's own enum values would fall through to `unknown`.
     return switch (format) {
-      'qrCode' || 'qr' || 'QR' => BarcodeFormatType.qr,
+      'qrCode' || 'microQrCode' || 'qr' || 'QR' => BarcodeFormatType.qr,
       'ean13' || 'EAN_13' || 'EAN-13' => BarcodeFormatType.ean13,
       'ean8' || 'EAN_8' || 'EAN-8' => BarcodeFormatType.ean8,
       'upcA' || 'UPC_A' || 'UPC-A' => BarcodeFormatType.upcA,
@@ -96,7 +100,12 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
       'code93' || 'CODE_93' || 'CODE-93' => BarcodeFormatType.code93,
       'code128' || 'CODE_128' || 'CODE-128' => BarcodeFormatType.code128,
       'codabar' || 'CODABAR' => BarcodeFormatType.codabar,
-      'itf' || 'ITF' => BarcodeFormatType.itf,
+      'itf' ||
+      'itf14' ||
+      'itf2of5' ||
+      'itf2of5WithChecksum' ||
+      'ITF' =>
+        BarcodeFormatType.itf,
       'pdf417' || 'PDF_417' || 'PDF417' => BarcodeFormatType.pdf417,
       'dataMatrix' || 'DATA_MATRIX' || 'DATA-MATRIX' =>
         BarcodeFormatType.dataMatrix,

@@ -66,7 +66,11 @@ dependencies:
   uuid: ^4.5.1
 
   # QR & Barcode
-  mobile_scanner: ^6.0.2
+  # 7.x scans on Apple via the Vision API and no longer depends on the
+  # GoogleMLKit pods. 6.x pinned BarcodeScanning ~> 7.0.0 -> MLKitCore (= 7.0.0)
+  # against google_mlkit_translation's MLKitCore (= 9.0.0), which no version
+  # negotiation can satisfy, so `pod install` could never resolve on iOS.
+  mobile_scanner: ^7.4.2
 
   # Speech & TTS
   speech_to_text: ^7.0.0
