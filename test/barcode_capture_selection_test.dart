@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:scan_translate_ai/features/scanner/domain/entities/barcode_format.dart';
@@ -9,6 +11,14 @@ const Barcode valueless = Barcode(
   rawValue: null,
   format: BarcodeFormat.qrCode,
 );
+
+/// The two pages that hand a `BarcodeCapture` to the helper.
+const scannerPages = {
+  'barcode_scanner_page.dart': 'lib/features/scanner/presentation/pages'
+      '/barcode_scanner_page.dart',
+  'qr_scanner_page.dart':
+      'lib/features/scanner/presentation/pages/qr_scanner_page.dart',
+};
 
 const Barcode readableQr = Barcode(
   rawValue: 'https://example.com',
@@ -123,5 +133,41 @@ void main() {
 
       expect(notifier.state.result!.id, isNot(firstId));
     });
+  });
+
+  // The behavioural group above proves the helper is correct. It cannot prove
+  // the *call sites* still route through it: the defect being guarded against
+  // was positional selection at the call site, so a test of the helper alone
+  // would stay green if a page reverted to `barcodes.first`. These guards pin
+  // the wiring itself.
+  group('scanner pages select through the helper', () {
+    for (final entry in scannerPages.entries) {
+      final name = entry.key;
+      final path = entry.value;
+
+      test('$name routes detection through firstDecodedBarcode', () {
+        final source = File(path).readAsStringSync();
+
+        expect(
+          source,
+          contains('firstDecodedBarcode(capture)'),
+          reason: '$name must select via firstDecodedBarcode so a valueless '
+              'detection cannot discard the whole frame',
+        );
+      });
+
+      test('$name never selects a barcode by position', () {
+        final source = File(path).readAsStringSync();
+
+        for (final positional in ['barcodes.first', 'barcodes[0]', 'barcodes.last']) {
+          expect(
+            source,
+            isNot(contains(positional)),
+            reason: '$name selects on $positional, which discards the frame '
+                'whenever a valueless detection is ordered first',
+          );
+        }
+      });
+    }
   });
 }
