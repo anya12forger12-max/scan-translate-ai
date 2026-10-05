@@ -126,10 +126,8 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage>
   }
 
   void _handleDetect(BarcodeCapture capture) {
-    if (capture.barcodes.isEmpty) return;
-
-    final barcode = capture.barcodes.first;
-    if (barcode.rawValue == null) return;
+    final barcode = firstDecodedBarcode(capture);
+    if (barcode == null) return;
 
     HapticUtils.success();
     ref.read(scannerProvider.notifier).onBarcodeDetected(

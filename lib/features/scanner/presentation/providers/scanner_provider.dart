@@ -1,6 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../domain/entities/barcode_format.dart';
 import '../../domain/entities/scan_result.dart';
+
+/// The first barcode in [capture] that carries a decoded value, or `null`.
+///
+/// The plugin hands back whatever ML Kit reported without filtering, and ML
+/// Kit's `rawValue` is nullable, so one frame can hold a valueless detection
+/// ahead of a perfectly readable code. Taking `barcodes.first` and then bailing
+/// out on its null value discards the whole frame — a silent no-op scan — so
+/// select on the value rather than on the position.
+Barcode? firstDecodedBarcode(BarcodeCapture capture) {
+  for (final barcode in capture.barcodes) {
+    if (barcode.rawValue != null) return barcode;
+  }
+  return null;
+}
 
 enum ScannerStatus { idle, scanning, success, error }
 
