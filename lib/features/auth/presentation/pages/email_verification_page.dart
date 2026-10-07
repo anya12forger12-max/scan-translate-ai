@@ -1,14 +1,75 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/auth_provider.dart';
 
-class EmailVerificationPage extends ConsumerWidget {
+class EmailVerificationPage extends ConsumerStatefulWidget {
   const EmailVerificationPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EmailVerificationPage> createState() =>
+      _EmailVerificationPageState();
+}
+
+class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
+  static const _resendCooldownSeconds = 60;
+  Timer? _cooldownTimer;
+  var _secondsRemaining = _resendCooldownSeconds;
+  var _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown();
+  }
+
+  @override
+  void dispose() {
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() => _secondsRemaining = _resendCooldownSeconds);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() {
+        if (_secondsRemaining > 0) {
+          _secondsRemaining--;
+        } else {
+          t.cancel();
+        }
+      });
+    });
+  }
+
+  Future<void> _resend() async {
+    if (_secondsRemaining > 0 || _sending) return;
+    setState(() => _sending = true);
+    final notifier = ref.read(authProvider.notifier);
+    await notifier.sendEmailVerification();
+    if (!mounted) return;
+    setState(() => _sending = false);
+    final message = ref.read(authProvider).errorMessage;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message ?? 'Verification email sent!'),
+      ),
+    );
+    if (message == null) {
+      _startCooldown();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
@@ -53,21 +114,18 @@ class EmailVerificationPage extends ConsumerWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      final notifier = ref.read(authProvider.notifier);
-                      await notifier.sendEmailVerification();
-                      if (!context.mounted) return;
-                      final authState = ref.read(authProvider);
-                      final message = authState.errorMessage;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            message ?? 'Verification email sent!',
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('Resend Verification Email'),
+                    onPressed: (_secondsRemaining > 0 || _sending)
+                        ? null
+                        : _resend,
+                    child: _sending
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_secondsRemaining > 0
+                            ? 'Resend Verification Email (${_secondsRemaining}s)'
+                            : 'Resend Verification Email'),
                   ),
                 ),
                 const SizedBox(height: 16),

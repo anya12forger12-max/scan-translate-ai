@@ -289,3 +289,24 @@ test('S5. Storage deny-all fallback rejects unmatched paths', async () => {
   await assertFails(a.ref('admin/secrets.txt').putString('top-secret'));
   await assertFails(a.ref('foo/bar.png').putString('x'));
 });
+test('L1. Authenticated user can fetch a single lookup doc, never by anon', async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc('lookups/qr-001').set({ value: 'hello' });
+  });
+  await assertSucceeds(asUserA().firestore().doc('lookups/qr-001').get());
+  await assertFails(anon().firestore().doc('lookups/qr-001').get());
+});
+
+test('L2. Lookup collection cannot be enumerated via list', async () => {
+  await assertFails(asUserA().firestore().collection('lookups').get());
+  await assertFails(asAdmin().firestore().collection('lookups').get());
+  await assertFails(anon().firestore().collection('lookups').get());
+});
+
+test('L3. Clients cannot create or modify lookup entries', async () => {
+  const a = asUserA().firestore();
+  await assertFails(a.doc('lookups/qr-002').set({ value: 'x' }));
+  await assertFails(a.doc('lookups/qr-001').update({ value: 'y' }));
+  await assertFails(a.doc('lookups/qr-001').delete());
+  await assertFails(asAdmin().firestore().doc('lookups/qr-003').set({ value: 'z' }));
+});

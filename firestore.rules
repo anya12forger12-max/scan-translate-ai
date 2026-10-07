@@ -161,6 +161,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Lookup index collection (e.g. stable public codes -> metadata).
+    // Supports single-document fetch ONLY: list is denied so clients cannot
+    // enumerate the whole index, unauthenticated callers get nothing, and
+    // clients can never create/update/delete (those go through the Admin SDK,
+    // which bypasses these rules entirely).
+    match /lookups/{key} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;
