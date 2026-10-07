@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../app/di/providers.dart';
 import '../../domain/entities/history_item.dart';
+import '../../domain/repositories/history_repository.dart';
 
 enum HistoryStatus { initial, loading, success, error }
 
@@ -10,6 +12,7 @@ class HistoryState {
   final String? errorMessage;
   final String searchQuery;
   final String? typeFilter;
+  final bool favoritesOnly;
 
   const HistoryState({
     this.status = HistoryStatus.initial,
@@ -18,6 +21,7 @@ class HistoryState {
     this.errorMessage,
     this.searchQuery = '',
     this.typeFilter,
+    this.favoritesOnly = false,
   });
 
   HistoryState copyWith({
@@ -27,7 +31,9 @@ class HistoryState {
     String? errorMessage,
     String? searchQuery,
     String? typeFilter,
+    bool? favoritesOnly,
     bool clearError = false,
+    bool clearTypeFilter = false,
   }) {
     return HistoryState(
       status: status ?? this.status,
@@ -35,19 +41,37 @@ class HistoryState {
       filteredItems: filteredItems ?? this.filteredItems,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       searchQuery: searchQuery ?? this.searchQuery,
-      typeFilter: typeFilter ?? this.typeFilter,
+      typeFilter: clearTypeFilter ? null : (typeFilter ?? this.typeFilter),
+      favoritesOnly: favoritesOnly ?? this.favoritesOnly,
     );
   }
 }
 
 class HistoryNotifier extends StateNotifier<HistoryState> {
-  HistoryNotifier() : super(const HistoryState());
+  final HistoryRepository _repository;
+
+  HistoryNotifier(this._repository) : super(const HistoryState());
+
+  Future<void> loadHistory() async {
+    state = state.copyWith(status: HistoryStatus.loading, clearError: true);
+    final result = await _repository.getHistory();
+    if (!mounted) return;
+    result.fold(
+      (failure) => setError(failure.message),
+      (items) => setItems(items),
+    );
+  }
 
   void setItems(List<HistoryItem> items) {
     state = state.copyWith(
       status: HistoryStatus.success,
       items: items,
-      filteredItems: _filterItems(items, state.searchQuery, state.typeFilter),
+      filteredItems: _filterItems(
+        items,
+        state.searchQuery,
+        state.typeFilter,
+        state.favoritesOnly,
+      ),
     );
   }
 
@@ -62,14 +86,37 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
   void setSearchQuery(String query) {
     state = state.copyWith(
       searchQuery: query,
-      filteredItems: _filterItems(state.items, query, state.typeFilter),
+      filteredItems: _filterItems(
+        state.items,
+        query,
+        state.typeFilter,
+        state.favoritesOnly,
+      ),
     );
   }
 
   void setTypeFilter(String? type) {
     state = state.copyWith(
       typeFilter: type,
-      filteredItems: _filterItems(state.items, state.searchQuery, type),
+      clearTypeFilter: type == null,
+      filteredItems: _filterItems(
+        state.items,
+        state.searchQuery,
+        type,
+        state.favoritesOnly,
+      ),
+    );
+  }
+
+  void setFavoritesOnly(bool value) {
+    state = state.copyWith(
+      favoritesOnly: value,
+      filteredItems: _filterItems(
+        state.items,
+        state.searchQuery,
+        state.typeFilter,
+        value,
+      ),
     );
   }
 
@@ -83,7 +130,12 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
 
     state = state.copyWith(
       items: items,
-      filteredItems: _filterItems(items, state.searchQuery, state.typeFilter),
+      filteredItems: _filterItems(
+        items,
+        state.searchQuery,
+        state.typeFilter,
+        state.favoritesOnly,
+      ),
     );
   }
 
@@ -91,7 +143,12 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
     final items = state.items.where((item) => item.id != id).toList();
     state = state.copyWith(
       items: items,
-      filteredItems: _filterItems(items, state.searchQuery, state.typeFilter),
+      filteredItems: _filterItems(
+        items,
+        state.searchQuery,
+        state.typeFilter,
+        state.favoritesOnly,
+      ),
     );
   }
 
@@ -103,8 +160,13 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
     List<HistoryItem> items,
     String query,
     String? type,
+    bool favoritesOnly,
   ) {
     var filtered = items;
+
+    if (favoritesOnly) {
+      filtered = filtered.where((item) => item.isFavorite).toList();
+    }
 
     if (type != null) {
       filtered = filtered.where((item) => item.scanType == type).toList();
@@ -112,8 +174,9 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
 
     if (query.isNotEmpty) {
       filtered = filtered
-          .where((item) =>
-              item.rawValue.toLowerCase().contains(query.toLowerCase()))
+          .where(
+            (item) => item.rawValue.toLowerCase().contains(query.toLowerCase()),
+          )
           .toList();
     }
 
@@ -121,7 +184,8 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
   }
 }
 
-final historyProvider =
-    StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
-  return HistoryNotifier();
+final historyProvider = StateNotifierProvider<HistoryNotifier, HistoryState>((
+  ref,
+) {
+  return HistoryNotifier(ref.watch(historyRepositoryProvider));
 });

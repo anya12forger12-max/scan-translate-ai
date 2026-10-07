@@ -1,4 +1,31 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "scan_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "scannedAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "scan_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "scanType", "order": "ASCENDING"},
+        {"fieldPath": "scannedAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "scan_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "isFavorite", "order": "ASCENDING"},
+        {"fieldPath": "scannedAt", "order": "DESCENDING"}
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

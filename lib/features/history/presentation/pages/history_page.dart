@@ -13,11 +13,26 @@ import '../providers/history_provider.dart';
 import '../widgets/history_filter.dart';
 import '../widgets/history_list_item.dart';
 
-class HistoryPage extends ConsumerWidget {
+class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends ConsumerState<HistoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(historyProvider.notifier).loadHistory();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final historyState = ref.watch(historyProvider);
     final historyNotifier = ref.read(historyProvider.notifier);
 
@@ -35,9 +50,7 @@ class HistoryPage extends ConsumerWidget {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Clear All History?'),
-                      content: const Text(
-                        'This action cannot be undone.',
-                      ),
+                      content: const Text('This action cannot be undone.'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
@@ -55,8 +68,9 @@ class HistoryPage extends ConsumerWidget {
                   );
                   if (confirm == true) {
                     HapticUtils.mediumImpact();
-                    final outcome =
-                        await ref.read(historyRepositoryProvider).clearHistory();
+                    final outcome = await ref
+                        .read(historyRepositoryProvider)
+                        .clearHistory();
                     if (!context.mounted) return;
                     outcome.fold(
                       (failure) {
@@ -71,9 +85,7 @@ class HistoryPage extends ConsumerWidget {
                       (_) {
                         historyNotifier.clearAll();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('History cleared'),
-                          ),
+                          const SnackBar(content: Text('History cleared')),
                         );
                       },
                     );
@@ -90,6 +102,8 @@ class HistoryPage extends ConsumerWidget {
           HistoryFilter(
             selectedType: historyState.typeFilter,
             onTypeChanged: (type) => historyNotifier.setTypeFilter(type),
+            favoritesOnly: historyState.favoritesOnly,
+            onFavoritesChanged: historyNotifier.setFavoritesOnly,
           ),
           const SizedBox(height: 8),
           if (historyState.items.isNotEmpty)
@@ -113,16 +127,15 @@ class HistoryPage extends ConsumerWidget {
               ),
             ),
           const SizedBox(height: 8),
-          Expanded(
-            child: _buildContent(historyState, ref),
-          ),
+          Expanded(child: _buildContent(historyState)),
         ],
       ),
     );
   }
 
-  Widget _buildContent(HistoryState state, WidgetRef ref) {
-    if (state.status == HistoryStatus.loading) {
+  Widget _buildContent(HistoryState state) {
+    if (state.status == HistoryStatus.loading ||
+        state.status == HistoryStatus.initial) {
       return ListView.builder(
         padding: const EdgeInsets.only(top: 8),
         itemCount: 6,
@@ -137,30 +150,38 @@ class HistoryPage extends ConsumerWidget {
       return ErrorDisplay(
         message: state.errorMessage ?? 'Failed to load history.',
         actionLabel: 'Retry',
-        onAction: () => ref.read(historyProvider.notifier).setLoading(),
+        onAction: () => ref.read(historyProvider.notifier).loadHistory(),
       );
     }
 
-    final items = state.searchQuery.isNotEmpty || state.typeFilter != null
+    final items =
+        state.searchQuery.isNotEmpty ||
+            state.typeFilter != null ||
+            state.favoritesOnly
         ? state.filteredItems
         : state.items;
 
     if (items.isEmpty) {
+      final isSearching = state.searchQuery.isNotEmpty;
       return EmptyState(
-        title: state.searchQuery.isNotEmpty
+        title: isSearching
             ? 'No Results Found'
+            : state.favoritesOnly
+            ? 'No Favorites Yet'
             : 'No Scan History Yet',
-        subtitle: state.searchQuery.isNotEmpty
+        subtitle: isSearching
             ? 'Try a different search term'
+            : state.favoritesOnly
+            ? 'Star a scan to find it here'
             : 'Your scanned codes will appear here',
-        icon: Icons.history_rounded,
+        icon: state.favoritesOnly
+            ? Icons.favorite_rounded
+            : Icons.history_rounded,
       );
     }
 
     return RefreshIndicator(
-      onRefresh: () async {
-        ref.read(historyProvider.notifier).setLoading();
-      },
+      onRefresh: () => ref.read(historyProvider.notifier).loadHistory(),
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 4, bottom: 16),
         itemCount: items.length,
@@ -180,7 +201,9 @@ class HistoryPage extends ConsumerWidget {
                 (failure) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to update favorite: ${failure.message}'),
+                      content: Text(
+                        'Failed to update favorite: ${failure.message}',
+                      ),
                     ),
                   );
                 },

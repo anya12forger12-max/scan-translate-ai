@@ -19,6 +19,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   var _privacyAccepted = false;
+  var _termsAccepted = false;
 
   @override
   void dispose() {
@@ -32,6 +33,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('You must explicitly accept the Privacy Policy to proceed.'),
+        ),
+      );
+      return;
+    }
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must explicitly accept the Terms and Conditions to proceed.'),
         ),
       );
       return;
@@ -50,6 +59,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('You must explicitly accept the Privacy Policy to proceed.'),
+        ),
+      );
+      return;
+    }
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must explicitly accept the Terms and Conditions to proceed.'),
         ),
       );
       return;
@@ -109,7 +126,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 48),
                   Semantics(
-                    label: 'Sign in to your account',
+                    label: 'Welcome Back',
                     child: Text(
                       'Welcome Back',
                       style: AppTypography.headlineMedium,
@@ -166,6 +183,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  Semantics(
+                    label: 'Terms and Conditions consent checkbox',
+                    child: CheckboxListTile(
+                      title: const Text(
+                        'I explicitly accept the Terms and Conditions of using Scan & Translate AI.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      value: _termsAccepted,
+                      onChanged: (v) => setState(() => _termsAccepted = v ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   if (errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
@@ -201,8 +232,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             )
                           : const Text('Sign In'),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 56,

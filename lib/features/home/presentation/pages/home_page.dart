@@ -7,6 +7,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../widgets/ad_banner.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../history/presentation/providers/history_provider.dart';
 import '../widgets/feature_card.dart';
 
 class HomePage extends ConsumerWidget {
@@ -183,7 +184,12 @@ class HomePage extends ConsumerWidget {
                     subtitle: 'View past scans',
                     color: AppColors.historyColor,
                     animationDelay: 300,
-                    onTap: () => Navigator.pushNamed(context, '/history'),
+                    onTap: () {
+                      ref
+                          .read(historyProvider.notifier)
+                          .setFavoritesOnly(false);
+                      Navigator.pushNamed(context, '/history');
+                    },
                   ),
                   FeatureCard(
                     icon: Icons.favorite_rounded,
@@ -192,11 +198,7 @@ class HomePage extends ConsumerWidget {
                     color: AppColors.favoriteColor,
                     animationDelay: 350,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Open history and filter by favorites'),
-                        ),
-                      );
+                      ref.read(historyProvider.notifier).setFavoritesOnly(true);
                       Navigator.pushNamed(context, '/history');
                     },
                   ),

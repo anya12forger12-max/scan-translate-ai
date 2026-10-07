@@ -9,6 +9,9 @@ import 'app/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Crashlytics for production error tracking
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
   // Poppins and Inter are bundled in assets/fonts and declared in
   // pubspec.yaml, so no runtime fetch is needed or wanted. Disabling it
   // turns a missing bundled face into a loud error instead of a silent

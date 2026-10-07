@@ -248,21 +248,19 @@ class AuthRemoteDataSource {
   AuthException _handleAuthException(firebase_auth.FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
-        return const AuthException('No account found with this email.');
       case 'wrong-password':
-        return const AuthException('Incorrect password. Please try again.');
       case 'invalid-credential':
+      case 'email-already-in-use':
+      case 'account-exists-with-different-credential':
         return const AuthException('Invalid email or password.');
       case 'invalid-email':
         return const AuthException('Please enter a valid email address.');
       case 'user-disabled':
-        return const AuthException('This account has been disabled.');
-      case 'email-already-in-use':
-        return const AuthException('An account with this email already exists.');
+        return const AuthException('This account is disabled.');
       case 'operation-not-allowed':
         return const AuthException('This sign-in method is not enabled.');
       case 'weak-password':
-        return const AuthException('Password is too weak.');
+        return const AuthException('Password does not meet complexity requirements.');
       case 'too-many-requests':
         return const AuthException('Too many attempts. Please try again later.');
       case 'network-request-failed':
