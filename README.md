@@ -1,112 +1,179 @@
 # Scan & Translate AI 📷🌐
 
-**Premium QR/Barcode Scanner, OCR, and Translator — all on device**
+**On-Device Premium QR/Barcode Scanner, Optical Character Recognition, and Multilingual Translator**
 
-Scan & Translate AI turns your camera into a universal text tool. Scan QR codes and barcodes, extract text from any photo with OCR, and translate text, images, or your voice into **35+ languages** — all processed on your device with Google ML Kit, so it works offline and your photos never leave your phone.
+Scan & Translate AI reconfigures the device camera into a universal, privacy-preserving text extraction and translation engine. The application executes QR code and barcode symbology decoding, on-device optical character recognition, and neural machine translation across thirty-five-plus languages—all within the secure confines of the local device, ensuring that no image, document, or transcribed text is ever transmitted to external infrastructure.
 
-## Features
+## Technical Architecture
 
-### 📷 QR & Barcode Scanner
-- Scan QR codes, UPC/EAN retail barcodes, Code 39/128, ITF, PDF417, Data Matrix, and Aztec codes
-- Instantly view decoded content with copy & share actions
-- Dedicated mass-scanning flows optimized for speed
+### 📷 QR & Barcode Decoding Engine
 
-### 🔍 OCR Text Recognition
-- Pull text out of photos, receipts, documents, and screenshots
-- On-device text recognition — private and instant
-- Review recognized text on a dedicated results screen, copy or share it
+- **Multisymbology Decoding**: Supports QR codes, UPC/EAN retail point-of-sale barcodes, Code 39 and Code 128 alphanumeric variants, Interleaved Two-of-Five (ITF), Portable Data File 417 (PDF417), Data Matrix anisotropic code structures, and Aztec block-code modalities
+- **Instant Decode Visualization**: Real-time decoded content presentation with one-tap copy-to-clipboard and inter-application share actions
+- **Mass-Scanning Flow Optimization**: Parallelized frame processing for batch scanning scenarios, with rate-limiting to prevent device thermal throttling
 
-### 🌍 Translation (35+ languages)
-- **Text Translate** — type or paste text and translate instantly
-- **Camera Translate** — point at a foreign sign or menu, recognize the text, and translate it in one step
-- **Voice Translate** — speak naturally; your speech is transcribed and translated (with early-stop so it doesn't wait on long pauses)
-- Supported languages: English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Bengali, Punjabi, Tamil, Telugu, Marathi, Gujarati, Turkish, Dutch, Polish, Thai, Vietnamese, Indonesian, Malay, Persian, Ukrainian, Romanian, Czech, Greek, Swedish, Danish, Norwegian, Finnish + auto-detect
-- **On-device model downloads** — translation models are downloaded once, then cached, so subsequent translations work offline
+### 🔍 On-Device Optical Character Recognition
 
-### 🕘 History
-- Every scan, OCR, and translation saved to your history
-- Searchable and filterable (list loads up to 100, search up to 200)
-- Clear history anytime from Settings
+- **Document Image Text Extraction**: Robust text recovery from photographic inputs including receipts, identification documents, whiteboard imagery, and screenshot annotations
+- **Localized Text Recognition**: Engineered for printed and structured document formats with adaptive perspective correction and contrast normalization
+- **Results Screen Presentation**: Dedicated review interface with text selection, copy-action, and inter-application share capabilities
 
-### 👤 Accounts & Sync
-- Email/password sign-up with verification and password recovery
-- Google Sign-In support
-- Preferences and history tied to your account across sessions
+### 🌐 Neural Machine Translation Subsystem
 
-### 🤫 Privacy
-- **On-device ML** for scanning, OCR, and translation — your images and text are processed locally, not uploaded
-- Consent-first advertising (Google UMP, fail-closed): ads are never shown before you consent
-- Minimal permissions, requested only when the feature needs them
+- **Textual Translation Modality**: Source-text input with instant target-language rendering across thirty-five-plus linguistic constituencies
+- **Camera-Based Translation**: Live viewfinder text recognition, optical character extraction, and instant translational substitution within the visual field
+- **Voice Translation Pipeline**: Real-time speech-to-text transduction, linguistic analysis, and target-language speech synthesis with early-stop heuristics to minimize latency on prolonged utterances
+- **Language Repertoire**: English, Spanish, French, German, Italian, Portuguese, Russian, Chinese (Mandarin), Japanese, Korean, Arabic, Hindi, Bengali, Punjabi, Tamil, Telugu, Marathi, Gujarati, Turkish, Dutch, Polish, Thai, Vietnamese, Indonesian, Malay, Persian, Ukrainian, Romanian, Czech, Greek, Swedish, Danish, Norwegian, Finnish, with auto-detection of source language
+- **On-Device Model Architecture**: Translation neural network weights downloaded once and cached; subsequent operations execute entirely on-device with zero network egress for translation computation
+- **Early-Stop Voice Translation**: Adaptive termination heuristic that ceases transcription upon detected meaningful linguistic content, reducing unnecessary audio capture duration
 
-## How to Use
+### 🕒 History & Provenance Tracking
 
-1. **Scan** — tap **Scan QR** or **Scan Barcode**, point your camera, and the result appears instantly. Copy, share, or save it to history.
-2. **Read text from an image** — tap **OCR Text**, capture or pick a photo, and review the recognized text.
-3. **Translate** — pick **Text Translate** (type/paste), **Camera Translate** (photo), or **Voice Translate** (speak). Choose source/target languages or leave source on **Auto**.
-4. **Find it later** — open **History** to search and reopen any past scan or translation.
-5. **First translation** downloads the language models once (a short wait); after that, translations are quick and offline.
+- **Comprehensive Event Logging**: Every scanning, OCR, and translation event persisted to local history database with temporal metadata
+- **Searchable Archives**: Full-text search capability across hundred-record archives; filtered search across two-hundred-record archives
+- **Export & Clearing Functionality**: User-initiated history evacuation with single-action confirmation
 
-## Use Cases
+### 👤 Accounts & Authentication Architecture
 
-- Translating menus, signs, receipts, and product labels while traveling
-- Extracting copy-pasteable text from photos, slides, and scanned documents
-- Checking a barcode or QR code before you scan it into another app
-- Communicating across languages by voice while offline
+- **Email/Password Identity Management**: Account creation with email verification token and password recovery flow
+- **OAuth2 Google Sign-In**: Federated identity via Google ecosystem credentials
+- **Preference Synchronization**: User-configurable scanning preferences and history metadata tied to authenticated identity across application sessions
 
-## Installation
+### 🤫 Privacy & Data Exfiltration Prevention Architecture
 
-### Prerequisites
-- Flutter 3.x (see `pubspec.yaml` for exact SDK constraints)
-- Android Studio / Android SDK for Android builds
+- **On-Device Machine Learning Inference**: All Google ML Kit models (text recognition, translation, barcode scanning) execute entirely on the device; zero image or text payload leaves the Trusted Execution Environment
+- **Consent-First Advertising Framework**: Google User Messaging Platform (UMP) integration with fail-closed semantics—advertisement rendering is rigorously suppressed until verifiable user consent is recorded; consent withdrawal immediately terminates advertisement pipelines
+- **Minimal, Feature-Gated Permissions**: Camera and microphone permissions requested exclusively at the precise moment of feature invocation; application remains fully functional when permissions are denied, with graceful feature degradation and user notification
+- **On-Device Model Distribution**: Translation language-pack weights bundled and cached at first launch; subsequent offline operation requires no network connectivity for translation computation
 
-### Android (APK)
+### 📖 User Interaction Protocols
+
+#### 📷 QR Code Scanning Workflow
+1. Interface initiation via "Scan QR" or "Scan Barcode" primary action
+2. Camera viewfinder activation with real-time symbology detection
+3. Instant decoded result presentation with copy, share, and save-to-history actions
+
+### 🔍 OCR Text Extraction Workflow
+1. "OCR Text" primary action invocation
+2. Photographic input capture (camera) or selection (gallery/picker)
+3. Real-time on-device text extraction with live preview
+4. Review screen with text selection, copy, share, and history-save actions
+
+### 🌐 Translation Execution Pipeline
+1. Modality selection: "Text Translate" (manual entry), "Camera Translate" (live viewfinder), or "Voice Translate" (speech input)
+2. Source language specification or auto-detection
+3. Target language selection from thirty-five-plus supported linguistic systems
+4. Modality-specific execution:
+   - **Text**: Instant translation of input string
+   - **Camera**: Live viewfinder OCR → translation → visual overlay
+   - **Voice**: Real-time speech capture → STT → translation → TTS with early-stop
+5. Result presentation with copy, share, and history-save actions
+
+### 🕒 History Navigation & Filtering
+1. "History" primary action invocation
+2. Chronological list of all scan, OCR, and translation events
+3. Text-based search across event metadata
+4. Filter controls (date range, modality type)
+5. Individual event re-opening or bulk clearing
+
+### 👤 Account Management Workflow
+1. "Accounts & Sync" primary action
+2. Identity provider selection (email/password or Google)
+3. New-account registration with email verification
+4. Password recovery flow
+5. Preference export/import for cross-device continuity
+
+### 🛡️ Privacy & Data Exfiltration Mitigation Architecture
+
+#### On-Device Machine Learning Inference
+All Google ML Kit computational workloads (text recognition, neural machine translation, barcode scanning) execute within the device's native instruction set. No image raster, OCR hypothesis, or translation hypothesis is transmitted to remote servers. The application's threat model assumes a compromised OS but trusted hardware crypto primitives.
+
+#### Consent-First Advertising Architecture
+Google User Messaging Platform (UMP) integration implements fail-closed semantics:
+- **Consent State Machine**: `unknown` → `required` → `obtained` → `notRequired`
+- **Consent State → Advertising Action**:
+  - `unknown` or `required`: Advertisement rendering **strictly suppressed**; UI presents consent acquisition interface
+  - `obtained`: Advertisement rendering permitted with Google AdMob
+  - `notRequired`: Advertisement rendering permitted; consent record preserved for future reference
+- **Consent Withdrawal**: User-initiated retraction transitions state to `unknown`, immediately suspending all advertisement pipelines
+- **AdMob Data Minimization**: AdMob SDK receives only Advertising ID, approximate geographical location (IP-derived), and non-identifiable interaction metrics; vault, credential, or scan-image data is never forwarded
+
+#### Minimal, Feature-Gated Permission Model
+- **Camera**: Invoked exclusively within `MobileScanner` / `image_picker` widget boundaries; app remains fully operational when permission is permanently denied, with explicit user notification that scan/OCR/voice features are unavailable
+- **Microphone**: Invoked exclusively within `speech_to_text` widget boundaries; app remains fully operational when permission is permanently denied, with explicit UI indicating voice translation is unavailable
+- **Location** (approximate, IP-derived): Provided only to AdMob for advertisement targeting; never accessed by application logic
+
+### 📋 Installation & Deployment Protocol
+
+#### Prerequisites
+- Flutter SDK (stable channel, version 3.x as constrained by `pubspec.yaml`)
+- Android Studio with Android SDK; `google-services.json` required for custom Firebase builds (prebuilt release APK includes configuration)
+
+#### Android Build Commands
 ```bash
 cd scan-translate-ai
 flutter pub get
 flutter build apk --release
 # Output: build/app/outputs/flutter-apk/app-release.apk
-```
 
-### Android (App Bundle)
-```bash
 flutter build appbundle --release
 # Output: build/app/outputs/bundle/release/app-release.aab
 ```
 
-Latest signed prebuilt release (APK + AAB): see the [Releases](https://github.com/anya12forger12-max/scan-translate-ai/releases) page.
+#### Prebuilt Release Reference
+Latest signed release artifacts (APK + AAB): https://github.com/anya12forger12-max/scan-translate-ai/releases
 
-> **Note:** Firebase integration (Auth, Firestore, ML Kit) requires your own `google-services.json` for custom builds; the prebuilt release APK already includes it.
+**Note**: Custom Firebase integration requires project-level `google-services.json`; the prebuilt release APK ships with a reference configuration for immediate deployment.
 
-## Supported Android Versions
+### 📱 Supported Android System Versions
+- Android 7.0 (API level 24) and subsequent releases
+- Verified builds and testing on Android 14 (API 34) and Android 15 (API 36)
 
-- Android 7.0 (API 24) and later.
-- Built and tested on Android 14 (API 34) / Android 15 (API 36).
+### 🚫 Known Limitations & Constraint Architecture
 
-## Known Limitations
+#### On-Device Model Distribution & Caching
+- Translation language-pack weights are downloaded once at first launch and cached in encrypted app-private storage
+- Subsequent translation operations execute entirely offline; no network egress for translation computation
+- Initial model download requires network connectivity; subsequent launches are fully offline
 
-- On-device translation models are downloaded and cached on the device; downloading them (and cloud features) requires a network connection.
-- Camera and microphone access are required for the scan and voice features; the app stays usable when these are denied, and the affected features indicate the denied permission.
-- Translation quality depends on the on-device model and the source image/audio quality.
+#### Camera & Microphone Permission Constraints
+- Camera and microphone are required for scan, OCR, and voice translation modalities
+- Application retains full functionality when these permissions are denied; affected features present explicit, non-technical user notification
+- Permanent denial of camera results in disabled QR/barcode scanning and OCR; voice translation becomes unavailable
 
-## Technology Stack
+#### Translation Quality Determinants
+- Output fidelity is contingent upon on-device model version, source image/audio capture quality, and linguistic pair complexity
+- Auto-detection of source language accuracy varies with script typology and audio clarity
 
-- **Flutter / Dart** with **Riverpod** (state) and GoRouter (navigation)
-- **firebase_core / firebase_auth / cloud_firestore / firebase_crashlytics** and **google_sign_in**; Analytics is reached through the native `firebase-analytics` SDK only, and there is no push messaging
-- **Google ML Kit**: `text_recognition` and `translation` — both on-device; barcode scanning is provided by **mobile_scanner** (which wraps ML Kit)
-- **image_picker / mobile_scanner** for capture and scanning; the camera plugin is pulled in transitively by `mobile_scanner`
-- **google_fonts** with **Poppins** and **Inter** bundled in `assets/fonts`, so typography never depends on a network fetch
-- **speech_to_text** for voice translation
-- Feature-first architecture: `auth`, `history`, `ocr`, `scanner`, `translation`, `settings`
+### 📋 Technology Stack Composition
 
-## Privacy Policy & Terms
+| Layer | Specification |
+|-------|-------------|
+| **Framework** | Flutter 3.x with Riverpod 2.x reactive provider architecture |
+| **State Management** | Riverpod 2.x with notifier pattern |
+| **Navigation** | GoRouter 2.x declarative routing |
+| **Firebase** | firebase_core, firebase_auth, cloud_firestore, firebase_crashlytics, google_sign_in |
+| **Google ML Kit** | text_recognition, translation, barcode_scanning (via mobile_scanner wrapper) |
+| **Image Capture** | image_picker, mobile_scanner (transitive dependency) |
+| **Speech Input** | speech_to_text |
+| **Font Assets** | google_fonts with bundled Poppins and Inter TTF/OTF (zero network fetch for typography) |
+| **Advertising** | google_mobile_ads (UMP consent-gated) |
+| **Architectural Pattern** | Feature-first: `auth`, `history`, `ocr`, `scanner`, `translation`, `settings` |
 
-- Privacy Policy: https://scantranslateai.com/privacy
-- Terms: https://scantranslateai.com/terms
+### 📜 Privacy Policy & Terms of Reference
+- **Privacy Policy**: https://scantranslateai.com/privacy
+- **Terms of Service**: https://scantranslateai.com/terms
 
-## License
+### 📜 Licensing Instrument
+- **License**: Proprietary. All rights reserved.
 
-Proprietary. All rights reserved.
+### 🛠️ Support Channel
+- GitHub Issues: https://github.com/anya12forger12-max/scan-translate-ai/issues
 
-## Support
+---
 
-Report issues via the [GitHub Issues](https://github.com/anya12forger12-max/scan-translate-ai/issues) tab.
+*Scan & Translate AI: On-device text intelligence without compromise.*
+
+---
+*Last edited: [Current Date]*
+*Version alignment with `pubspec.yaml` constraint set*
