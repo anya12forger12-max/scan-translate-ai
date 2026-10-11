@@ -71,7 +71,7 @@ class AuthRemoteDataSource {
       userModel['uid'] = result.user!.uid;
       return userModel;
     } on firebase_auth.FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw _handleAuthException(e, isRegistration: true);
     }
   }
 
@@ -245,14 +245,25 @@ class AuthRemoteDataSource {
     } catch (_) {}
   }
 
-  AuthException _handleAuthException(firebase_auth.FirebaseAuthException e) {
+  AuthException _handleAuthException(
+    firebase_auth.FirebaseAuthException e, {
+    bool isRegistration = false,
+  }) {
     switch (e.code) {
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':
-      case 'email-already-in-use':
-      case 'account-exists-with-different-credential':
         return const AuthException('Invalid email or password.');
+      case 'email-already-in-use':
+        return AuthException(
+          isRegistration
+              ? 'An account with this email already exists. Please sign in instead.'
+              : 'Invalid email or password.',
+        );
+      case 'account-exists-with-different-credential':
+        return const AuthException(
+          'This email is already registered with a different sign-in method.',
+        );
       case 'invalid-email':
         return const AuthException('Please enter a valid email address.');
       case 'user-disabled':
