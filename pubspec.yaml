@@ -1,7 +1,7 @@
 name: scan_translate_ai
 description: 'Scan & Translate AI - Premium QR/Barcode Scanner, OCR, and Translation App'
 publish_to: 'none'
-version: 1.2.32+37
+version: 1.2.33+38
 
 environment:
   sdk: ^3.12.2
