@@ -33,5 +33,26 @@ void main() {
         );
       }
     });
+
+    test('Crashlytics is only touched after Firebase.initializeApp', () async {
+      // FirebaseCrashlytics.instance resolves Firebase.app() and throws
+      // [core/no-app] before initializeApp has run, which crashed cold
+      // launch on the v1.2.32 release build for every user. This guard
+      // pins the source ordering so the call can never move back above
+      // initialization.
+      final src = await File('lib/main.dart').readAsString();
+      final initIndex = src.indexOf('Firebase.initializeApp()');
+      final crashlyticsIndex =
+          src.indexOf('FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled');
+      expect(initIndex, greaterThan(-1),
+          reason: 'Firebase.initializeApp() must be called in main()');
+      expect(crashlyticsIndex, greaterThan(-1),
+          reason: 'Crashlytics enable call is missing from main()');
+      expect(crashlyticsIndex, greaterThan(initIndex),
+          reason:
+              'Crashlytics is touched at offset $crashlyticsIndex before '
+              'Firebase.initializeApp() at $initIndex — cold launch throws '
+              '[core/no-app]');
+    });
   });
 }
