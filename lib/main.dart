@@ -9,9 +9,6 @@ import 'app/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Crashlytics for production error tracking
-  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-
   // Poppins and Inter are bundled in assets/fonts and declared in
   // pubspec.yaml, so no runtime fetch is needed or wanted. Disabling it
   // turns a missing bundled face into a loud error instead of a silent
@@ -24,6 +21,18 @@ void main() async {
     firebaseReady = true;
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
+  }
+
+  // Crashlytics may only be touched after Firebase.initializeApp() has run:
+  // FirebaseCrashlytics.instance resolves Firebase.app() and throws
+  // [core/no-app] when no default app exists. Guard on firebaseReady so a
+  // failed init can never crash startup.
+  if (firebaseReady) {
+    try {
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    } catch (e) {
+      debugPrint('Crashlytics initialization failed: $e');
+    }
   }
 
   FlutterError.onError = (errorDetails) {
