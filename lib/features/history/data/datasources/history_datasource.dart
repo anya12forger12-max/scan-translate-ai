@@ -36,7 +36,7 @@ class HistoryRemoteDataSource {
       .collection('users').doc(_uid).collection('history')
       .limit(500).get();
     final batch = firestore.batch();
-    for (final d in snap.docs) batch.delete(d.reference);
+    for (final d in snap.docs) { batch.delete(d.reference); }
     await batch.commit();
   }
 

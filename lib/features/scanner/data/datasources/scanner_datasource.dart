@@ -41,7 +41,7 @@ class ScannerRemoteDataSource {
     if (uid.isEmpty) throw const AuthException('Not authenticated.');
     final snaps = await firestore.collection(FirebaseConstants.scanHistoryCollection).where('userId', isEqualTo: uid).get();
     final batch = firestore.batch();
-    for (final d in snaps.docs) batch.delete(d.reference);
+    for (final d in snaps.docs) { batch.delete(d.reference); }
     await batch.commit();
   }
 }

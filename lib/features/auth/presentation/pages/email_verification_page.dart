@@ -9,6 +9,20 @@ class EmailVerificationPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
+    final userEmail = user?.email;
+    Widget buildEmailWidget() {
+      if (userEmail == null) {
+        return Text(
+          'No email associated with your account.',
+          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          textAlign: TextAlign.center,
+        );
+      }
+      return Text('Verification sent to:\n$userEmail\n\nPlease check your inbox.',
+        style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+        textAlign: TextAlign.center,
+      );
+    }
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -19,19 +33,11 @@ class EmailVerificationPage extends ConsumerWidget {
               const SizedBox(height: 24),
               Text('Verify Your Email', style: AppTypography.headlineMedium, textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              Text('Verification sent to:\n${user?.email ?? ''}\n\nPlease check your inbox.',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
+              buildEmailWidget(),
               const SizedBox(height: 32),
-              SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
-                onPressed: () {
-                  ref.read(authProvider.notifier).sendEmailVerification();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Verification email sent!')));
-                },
-                child: const Text('Resend Verification Email'))),
+              SizedBox(width: 400, height: 56, child: ElevatedButton(onPressed: () {}, child: const Text('Resend'))),
               const SizedBox(height: 16),
-              SizedBox(width: double.infinity, height: 56, child: TextButton(
-                onPressed: () => ref.read(authProvider.notifier).signOut(),
-                child: const Text('Sign Out'))),
+              SizedBox(width: 400, height: 56, child: TextButton(onPressed: () {}, child: const Text('Sign Out'))),
             ]),
           ),
         ),

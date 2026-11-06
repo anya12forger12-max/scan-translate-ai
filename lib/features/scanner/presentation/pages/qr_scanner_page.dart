@@ -39,12 +39,13 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage> {
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await canLaunchUrl(uri)) return;
+    if (!mounted) return;
     final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
       title: const Text('Open Link'), content: Text('Open:\n$url'),
       actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
         ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Open'))],
     ));
-    if (ok == true) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (ok == true && mounted) await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override

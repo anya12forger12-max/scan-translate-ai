@@ -18,7 +18,10 @@ class AuthRemoteDataSource {
     try {
       final r = await firebaseAuth.signInWithEmailAndPassword(email: email.trim(), password: password);
       if (r.user == null) throw const AuthException('Sign-in failed.');
-      await _updateLastLogin(r.user!.uid);
+      // Enforce email verification on every sign-in
+      if (r.user!.emailVerified) {
+        await _updateLastLogin(r.user!.uid);
+      }
       return await _getUserData(r.user!);
     } on fa.FirebaseAuthException catch (e) { throw _handleError(e); }
   }
@@ -28,13 +31,15 @@ class AuthRemoteDataSource {
       final r = await firebaseAuth.createUserWithEmailAndPassword(email: email.trim(), password: password);
       if (r.user == null) throw const AuthException('Registration failed.');
       await r.user!.updateDisplayName(name.trim());
+      // Send verification email immediately after sign-up
       await r.user!.sendEmailVerification();
+      // Store initial user data with emailVerified=false
       await firestore.collection(FirebaseConstants.usersCollection).doc(r.user!.uid).set({
         'email': email.trim(), 'displayName': name.trim(), 'role': 'user',
         'emailVerified': false, 'privacyPolicyAccepted': false,
         'createdAt': FieldValue.serverTimestamp(), 'lastLoginAt': FieldValue.serverTimestamp(),
       });
-      return {'uid': r.user!.uid, 'email': email.trim(), 'displayName': name.trim(), 'role': 'user'};
+      return {'uid': r.user!.uid, 'email': email.trim(), 'displayName': name.trim(), 'role': 'user', 'emailVerified': false};
     } on fa.FirebaseAuthException catch (e) { throw _handleError(e); }
   }
 
@@ -46,6 +51,10 @@ class AuthRemoteDataSource {
       final cred = fa.GoogleAuthProvider.credential(accessToken: gaAuth.accessToken, idToken: gaAuth.idToken);
       final r = await firebaseAuth.signInWithCredential(cred);
       if (r.user == null) throw const AuthException('Google sign-in failed.');
+      // Enforce email verification for Google sign-in too
+      if (r.user!.emailVerified) {
+        await _updateLastLogin(r.user!.uid);
+      }
       final doc = await firestore.collection(FirebaseConstants.usersCollection).doc(r.user!.uid).get();
       if (!doc.exists) {
         await firestore.collection(FirebaseConstants.usersCollection).doc(r.user!.uid).set({
@@ -117,6 +126,9 @@ class AuthRemoteDataSource {
       'weak-password' => const AuthException('Password is too weak.'),
       'too-many-requests' => const AuthException('Too many attempts. Try later.'),
       'network-request-failed' => const AuthException('Network error.'),
+      'user-disabled' => const AuthException('This account has been disabled.'),
+      'operation-not-allowed' => const AuthException('This sign-in method is not enabled.'),
+      'email-not-verified' => AuthException('Your email address is not verified. Please check your inbox and click the verification link.'),
       _ => AuthException(e.message ?? 'An error occurred.'),
     };
   }
