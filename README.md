@@ -15,3 +15,13 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+---
+
+## Repository
+
+- **Home:** https://github.com/anya12forger12-max/scan-translate-ai
+- **License:** MIT (see `LICENSE`)
+- **Issues:** https://github.com/anya12forger12-max/scan-translate-ai/issues
+- **Security:** See `SECURITY.md` / `.github/SECURITY.md`
+- **Contributing:** See `CONTRIBUTING.md` (or open an issue/PR)
