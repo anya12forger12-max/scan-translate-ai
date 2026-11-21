@@ -7,6 +7,9 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    # firebase/rules-testing is a Node.js project; its firebase-tools
+    # dependency ships Dart templates that are not part of this app.
+    - firebase/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
