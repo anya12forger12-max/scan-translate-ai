@@ -50,7 +50,7 @@ jobs:
       - name: Install Firebase CLI
         # Keep the CLI in lockstep with the emulator/rules-test suite so a
         # CLI major bump cannot break deploy independently of the tests.
-        run: npm install -g firebase-tools@15.31.0
+        run: npm install -g firebase-tools@15.36.0
 
       - name: Deploy Firestore Rules and Indexes
         # firestore.indexes.json declares the composite indexes the History
