@@ -48,9 +48,15 @@ jobs:
           node-version: '20'
 
       - name: Install Firebase CLI
-        run: npm install -g firebase-tools
+        # Keep the CLI in lockstep with the emulator/rules-test suite so a
+        # CLI major bump cannot break deploy independently of the tests.
+        run: npm install -g firebase-tools@15.31.0
 
-      - name: Deploy Firestore Rules
-        run: firebase deploy --only firestore:rules
+      - name: Deploy Firestore Rules and Indexes
+        # firestore.indexes.json declares the composite indexes the History
+        # screen's queries need. Deploying rules alone leaves production with
+        # missing indexes (runtime "The query requires an index" failures).
+        # Storage is intentionally excluded: the project has no bucket.
+        run: firebase deploy --only firestore:rules,firestore:indexes
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
