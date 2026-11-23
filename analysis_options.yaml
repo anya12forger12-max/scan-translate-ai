@@ -1,4 +1,9 @@
 analyzer:
+  errors:
+    # Flutter 3.50 marks package:flutter/material.dart as deprecated in favour
+    # of package:material_ui. Ignore that advisory until the migration lands so
+    # the analyzer result is stable across SDK versions.
+    deprecated_member_use: ignore
   exclude:
     - build/**
     - android/**
