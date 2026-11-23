@@ -45,6 +45,7 @@ ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 
 # Misc
+.vercel/
 *.log
 .pub-cache/
 .flutter-plugins-dependencies
