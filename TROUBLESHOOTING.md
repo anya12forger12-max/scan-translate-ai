@@ -14,6 +14,16 @@
 - **Tests fail locally but pass in CI** — ensure dependency versions match
   (use the lockfile).
 
+## Web / Vercel deployment
+
+- The Vercel project uses `vercel.json` and `scripts/vercel-build.sh`. The
+  script installs the pinned Flutter SDK (`3.47.3`, same as CI) when the build
+  image does not provide one and emits the static site to `build/web`.
+- Override the SDK version with the `FLUTTER_VERSION` environment variable if
+  the project is migrated to a newer Flutter release.
+- Run `flutter build web --release --base-href / --no-wasm-dry-run` locally to
+  reproduce the deployment build.
+
 ## Getting help
 
 Open an issue with reproduction steps, environment details, and logs.

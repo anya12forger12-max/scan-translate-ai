@@ -22,3 +22,5 @@ jobs:
         run: flutter analyze lib/ test/
       - name: Test
         run: flutter test
+      - name: Build web (Vercel target)
+        run: flutter build web --release --base-href / --no-wasm-dry-run
